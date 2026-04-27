@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { TRADEABLE_SYMBOLS, EXCHANGES, TIME_FRAMES, formatFundingRate } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,24 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function ChartView() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [selectedSymbol, setSelectedSymbol] = useState("BTC");
   const [selectedExchange, setSelectedExchange] = useState("Binance");
   const [selectedTimeFrame, setSelectedTimeFrame] = useState(7);
+
+  // Parse query parameters on mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.split("?")[1]);
+    const symbol = params.get("symbol");
+    const exchange = params.get("exchange");
+
+    if (symbol && TRADEABLE_SYMBOLS.includes(symbol)) {
+      setSelectedSymbol(symbol);
+    }
+    if (exchange && EXCHANGES.includes(exchange)) {
+      setSelectedExchange(exchange);
+    }
+  }, [location]);
 
   // Calculate time range
   const now = new Date();
@@ -115,6 +129,16 @@ export default function ChartView() {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex items-end">
+            <Button
+              onClick={() => navigate("/dashboard")}
+              variant="outline"
+              className="w-full"
+            >
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
 
         {/* Chart */}
@@ -134,19 +158,16 @@ export default function ChartView() {
               </div>
             ) : chartData.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
-                No historical data available for this pair
+                No historical data available for this pair yet. Check back later as data accumulates.
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
-                  <YAxis label={{ value: "Funding Rate (%)", angle: -90, position: "insideLeft" }} />
+                  <YAxis />
                   <Tooltip
-                    formatter={(value) => {
-                      if (typeof value === "number") return value.toFixed(4) + "%";
-                      return value;
-                    }}
+                    formatter={(value) => `${(typeof value === 'number' ? value : 0).toFixed(4)}%`}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
                   <Legend />
@@ -155,26 +176,7 @@ export default function ChartView() {
                     dataKey="rate"
                     stroke="#3b82f6"
                     dot={false}
-                    name="Close Rate"
-                    strokeWidth={2}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="high"
-                    stroke="#10b981"
-                    dot={false}
-                    name="High"
-                    strokeWidth={1}
-                    strokeDasharray="5 5"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="low"
-                    stroke="#ef4444"
-                    dot={false}
-                    name="Low"
-                    strokeWidth={1}
-                    strokeDasharray="5 5"
+                    name="Funding Rate"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -187,33 +189,33 @@ export default function ChartView() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Average Rate</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">Average</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-slate-900">
-                  {formatFundingRate(chartData.reduce((a, b) => a + b.rate / 100, 0) / chartData.length)}
+                  {formatFundingRate((chartData.reduce((a, b) => a + b.rate, 0) / chartData.length) / 100)}
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Highest Rate</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">Highest</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {formatFundingRate(Math.max(...chartData.map((d) => d.high)) / 100)}
+                  {formatFundingRate(Math.max(...chartData.map((d) => d.rate)) / 100)}
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Lowest Rate</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">Lowest</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
-                  {formatFundingRate(Math.min(...chartData.map((d) => d.low)) / 100)}
+                  {formatFundingRate(Math.min(...chartData.map((d) => d.rate)) / 100)}
                 </div>
               </CardContent>
             </Card>
@@ -225,7 +227,7 @@ export default function ChartView() {
               <CardContent>
                 <div className="text-2xl font-bold text-slate-900">
                   {formatFundingRate(
-                    (Math.max(...chartData.map((d) => d.high)) - Math.min(...chartData.map((d) => d.low))) / 100
+                    (Math.max(...chartData.map((d) => d.rate)) - Math.min(...chartData.map((d) => d.rate))) / 100
                   )}
                 </div>
               </CardContent>

@@ -24,8 +24,26 @@ export async function syncFundingRates(): Promise<void> {
 
     console.log(`[FundingRates Job] Fetched ${fundingRates.length} funding rates`);
 
+    // Filter out invalid rates (NaN, Infinity, etc.)
+    const validRates = fundingRates.filter((rate) => {
+      return (
+        typeof rate.fundingRate === "number" &&
+        !isNaN(rate.fundingRate) &&
+        isFinite(rate.fundingRate)
+      );
+    });
+
+    if (validRates.length === 0) {
+      console.warn("[FundingRates Job] No valid funding rates after filtering");
+      return;
+    }
+
+    console.log(
+      `[FundingRates Job] ${validRates.length} valid rates after filtering`
+    );
+
     // Prepare data for storage
-    const latestRates: InsertFundingRateLatest[] = fundingRates.map((rate) => ({
+    const latestRates: InsertFundingRateLatest[] = validRates.map((rate) => ({
       symbol: rate.symbol,
       pair: `${rate.symbol}USDT`,
       exchange: rate.exchange,
@@ -34,7 +52,7 @@ export async function syncFundingRates(): Promise<void> {
     }));
 
     // Store historical OHLC data (for now, using close price as all OHLC values)
-    const historicalRates: InsertFundingRate[] = fundingRates.map((rate) => ({
+    const historicalRates: InsertFundingRate[] = validRates.map((rate) => ({
       symbol: rate.symbol,
       pair: `${rate.symbol}USDT`,
       exchange: rate.exchange,
@@ -63,7 +81,9 @@ export async function syncFundingRates(): Promise<void> {
  * Start the background job with a specified interval
  * @param intervalMs - Interval in milliseconds (default: 5 minutes)
  */
-export function startFundingRatesJob(intervalMs: number = 5 * 60 * 1000): NodeJS.Timer {
+export function startFundingRatesJob(
+  intervalMs: number = 5 * 60 * 1000
+): NodeJS.Timer {
   console.log(`[FundingRates Job] Starting job with ${intervalMs}ms interval`);
 
   // Run immediately on startup

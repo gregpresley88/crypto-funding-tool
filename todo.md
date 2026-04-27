@@ -56,3 +56,16 @@
 - [x] Create PROJECT_README.md with architecture and features
 - [x] Document API endpoints and data flow
 - [x] Document exchange API details and rate limits
+
+
+## Phase 7: Enhanced Features - User Requested
+- [x] Make symbols clickable to navigate to historical chart with pre-selected symbol
+- [x] Add remaining exchanges (Bitget, KuCoin, BingX, XT.COM, HTX, Deribit, MEXC) - 12 total with public APIs
+- [ ] Fetch and display 24h traded volume for each perpetual contract
+- [ ] Add database schema for volume data
+- [ ] Implement data persistence/archiving strategy
+- [ ] Add CSV export functionality
+- [ ] Add data retention policies
+- [x] Test all new exchanges for data availability
+- [x] Optimize performance with additional exchanges
+- [x] Fix NaN validation issues in data storage

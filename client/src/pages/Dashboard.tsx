@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { TIME_FRAMES, AUTO_REFRESH_INTERVAL, formatFundingRate, calculateAnnualizedRate } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -278,7 +278,15 @@ export default function Dashboard() {
 
                       return (
                         <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 font-medium text-slate-900">{row.symbol}</td>
+                          <td className="py-3 px-4 font-medium">
+                            <button
+                              onClick={() => navigate(`/chart?symbol=${row.symbol}&exchange=${row.exchange}`)}
+                              className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
+                              title="Click to view historical chart"
+                            >
+                              {row.symbol}
+                            </button>
+                          </td>
                           <td className="py-3 px-4 text-slate-600">{row.exchange}</td>
                           <td className={`py-3 px-4 text-right font-semibold ${colorClass} rounded`}>
                             {formatFundingRate(rate)}
