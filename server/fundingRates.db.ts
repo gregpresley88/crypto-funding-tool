@@ -209,3 +209,40 @@ export async function getAllExchanges() {
 
   return result.map((r) => r.exchange);
 }
+
+
+/**
+ * Get average funding rate for a symbol-exchange pair over a time period
+ * Used for time frame analysis (7, 14, 30 days)
+ */
+export async function getAverageFundingRateForTimeFrame(
+  symbol: string,
+  exchange: string,
+  daysBack: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const now = Date.now();
+  const startTime = now - daysBack * 24 * 60 * 60 * 1000;
+
+  const result = await db
+    .select({
+      symbol: fundingRatesLatest.symbol,
+      exchange: fundingRatesLatest.exchange,
+      avgRate: sql<string>`AVG(CAST(${fundingRatesLatest.fundingRate} AS DECIMAL(10,8)))`,
+      minRate: sql<string>`MIN(CAST(${fundingRatesLatest.fundingRate} AS DECIMAL(10,8)))`,
+      maxRate: sql<string>`MAX(CAST(${fundingRatesLatest.fundingRate} AS DECIMAL(10,8)))`,
+    })
+    .from(fundingRatesLatest)
+    .where(
+      and(
+        eq(fundingRatesLatest.symbol, symbol),
+        eq(fundingRatesLatest.exchange, exchange),
+        gte(fundingRatesLatest.updatedAt, new Date(startTime))
+      )
+    )
+    .groupBy(fundingRatesLatest.symbol, fundingRatesLatest.exchange);
+
+  return result[0] || null;
+}

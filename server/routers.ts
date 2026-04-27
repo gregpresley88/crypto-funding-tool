@@ -9,6 +9,7 @@ import {
   getLatestFundingRatesByExchange,
   getFundingRatesBySymbolAndExchange,
   getAverageFundingRateBySymbol,
+  getAverageFundingRateForTimeFrame,
   getAllSymbols,
   getAllExchanges,
 } from "./fundingRates.db";
@@ -110,6 +111,25 @@ export const appRouter = router({
     getAllExchanges: publicProcedure.query(async () => {
       return getAllExchanges();
     }),
+
+    /**
+     * Get average funding rate for a symbol-exchange pair over a time frame
+     */
+    getAverageForTimeFrame: publicProcedure
+      .input(
+        z.object({
+          symbol: z.string(),
+          exchange: z.string(),
+          daysBack: z.number().default(7),
+        })
+      )
+      .query(async ({ input }) => {
+        return getAverageFundingRateForTimeFrame(
+          input.symbol,
+          input.exchange,
+          input.daysBack
+        );
+      }),
   }),
 });
 

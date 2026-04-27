@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { TIME_FRAMES, AUTO_REFRESH_INTERVAL, formatFundingRate, calculateAnnualizedRate } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, ExternalLink } from "lucide-react";
 
 interface FundingRateData {
   symbol: string;
   exchange: string;
   fundingRate: string;
   timestamp: number;
+}
+
+/**
+ * Get the perpetual trading link for each exchange
+ */
+function getExchangeLink(exchange: string, symbol: string): string {
+  const pair = `${symbol}USDT`;
+  
+  const links: Record<string, string> = {
+    "Binance": `https://www.binance.com/en/futures/${pair}`,
+    "OKX": `https://www.okx.com/trade-swap/${symbol.toLowerCase()}-usdt`,
+    "Bybit": `https://www.bybit.com/trade/usdt/${pair}`,
+    "Gate": `https://www.gate.io/futures/usdt/${pair}`,
+    "Bitget": `https://www.bitget.com/spot/trading/${pair}`,
+    "KuCoin": `https://www.kucoin.com/trade/${pair}`,
+    "BingX": `https://bingx.com/trade/${pair}`,
+    "XT.COM": `https://www.xt.com/trade/${pair}`,
+    "HTX": `https://www.htx.com/trade/swap/${pair}`,
+    "Kraken": `https://www.kraken.com/prices/charts/xbtusd`,
+    "Deribit": `https://www.deribit.com/`,
+    "MEXC": `https://www.mexc.com/exchange/${pair}`,
+  };
+  
+  return links[exchange] || "https://www.google.com/search?q=" + encodeURIComponent(`${exchange} ${symbol} perpetual trading`);
 }
 
 export default function Dashboard() {
@@ -287,7 +311,18 @@ export default function Dashboard() {
                               {row.symbol}
                             </button>
                           </td>
-                          <td className="py-3 px-4 text-slate-600">{row.exchange}</td>
+                          <td className="py-3 px-4">
+                            <a
+                              href={getExchangeLink(row.exchange, row.symbol)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer inline-flex items-center gap-1"
+                              title={`Open ${row.exchange} perpetual trading page`}
+                            >
+                              {row.exchange}
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </td>
                           <td className={`py-3 px-4 text-right font-semibold ${colorClass} rounded`}>
                             {formatFundingRate(rate)}
                           </td>

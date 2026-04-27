@@ -69,3 +69,9 @@
 - [x] Test all new exchanges for data availability
 - [x] Optimize performance with additional exchanges
 - [x] Fix NaN validation issues in data storage
+
+
+## User Reported Issues & Feature Requests
+- [ ] Implement Time Frame feature (7/14/30 days) to show historical averages
+- [ ] Add clickable exchange names that open exchange perpetual trading pages
+- [ ] Calculate and display historical funding rate averages for selected time frame
