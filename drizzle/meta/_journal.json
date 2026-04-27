@@ -15,6 +15,13 @@
       "when": 1777242370914,
       "tag": "0001_lazy_roxanne_simpson",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1777316460554,
+      "tag": "0002_closed_franklin_storm",
+      "breakpoints": true
     }
   ]
 }

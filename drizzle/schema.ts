@@ -82,3 +82,25 @@ export const fundingRatesLatest = mysqlTable("funding_rates_latest", {
 
 export type FundingRateLatest = typeof fundingRatesLatest.$inferSelect;
 export type InsertFundingRateLatest = typeof fundingRatesLatest.$inferInsert;
+/**
+ * 24-hour trading volume table for perpetual contracts.
+ * Stores the 24h volume for each symbol-exchange pair.
+ */
+export const tradingVolume = mysqlTable("trading_volume", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Cryptocurrency symbol (e.g., "BTC", "ETH") */
+  symbol: varchar("symbol", { length: 20 }).notNull(),
+  /** Trading pair (e.g., "BTCUSDT") */
+  pair: varchar("pair", { length: 30 }).notNull(),
+  /** Exchange name (e.g., "Binance", "OKX") */
+  exchange: varchar("exchange", { length: 50 }).notNull(),
+  /** 24-hour trading volume in USDT */
+  volume24h: decimal("volume_24h", { precision: 20, scale: 2 }).notNull(),
+  /** When this record was created in the database */
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  /** When this record was last updated */
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TradingVolume = typeof tradingVolume.$inferSelect;
+export type InsertTradingVolume = typeof tradingVolume.$inferInsert;
