@@ -1,6 +1,6 @@
 /**
  * Exchange Services for Fetching Funding Rates and Volume Data
- * Supports direct API calls to all 20 major exchanges without authentication
+ * Supports direct API calls to all major exchanges without authentication
  */
 
 export interface FundingRateData {
@@ -84,14 +84,14 @@ async function fetchBinanceFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}USDT`;
-      
+
       try {
-        // Fetch funding rate
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://fapi.binance.com/fapi/v1/fundingRate?symbol=${pair}&limit=1`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://fapi.binance.com/fapi/v1/fundingRate?symbol=${pair}&limit=1`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
@@ -99,7 +99,7 @@ async function fetchBinanceFundingRates(): Promise<FundingRateData[]> {
         if (Array.isArray(data) && data.length > 0) {
           const latest = data[data.length - 1];
           const fundingRate = parseFloat(latest.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -131,13 +131,14 @@ async function fetchOKXFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const instId = `${symbol}-USDT-SWAP`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
@@ -145,7 +146,7 @@ async function fetchOKXFundingRates(): Promise<FundingRateData[]> {
         if (data.code === "0" && data.data && data.data.length > 0) {
           const latest = data.data[0];
           const fundingRate = parseFloat(latest.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -176,27 +177,33 @@ async function fetchBybitFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}USDT`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${pair}&limit=1`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${pair}&limit=1`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
-        if (data.retCode === 0 && data.result && data.result.list && data.result.list.length > 0) {
+        if (
+          data.retCode === 0 &&
+          data.result &&
+          data.result.list &&
+          data.result.list.length > 0
+        ) {
           const latest = data.result.list[0];
           const fundingRate = parseFloat(latest.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
               exchange: "Bybit",
               fundingRate,
-              fundingTime: parseInt(latest.fundingTimestamp),
+              fundingTime: parseInt(latest.fundingRateTimestamp),
             });
           }
         }
@@ -221,26 +228,29 @@ async function fetchGateFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}_USDT`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://api.gateio.ws/api/v4/futures/usdt/funding_rate/${pair}`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://api.gateio.ws/api/v4/futures/usdt/funding_rate/${pair}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
         if (data.funding_rate !== undefined) {
           const fundingRate = parseFloat(data.funding_rate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
               exchange: "Gate",
               fundingRate,
-              fundingTime: data.funding_time ? parseInt(data.funding_time) * 1000 : Date.now(),
+              fundingTime: data.funding_time
+                ? parseInt(data.funding_time) * 1000
+                : Date.now(),
             });
           }
         }
@@ -265,20 +275,21 @@ async function fetchBitgetFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}USDT`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://api.bitget.com/v2/public/market/funding-rate?symbol=${pair}`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://api.bitget.com/v2/public/market/funding-rate?symbol=${pair}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
         if (data.code === "00000" && data.data) {
           const fundingRate = parseFloat(data.data.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -309,20 +320,25 @@ async function fetchKuCoinFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}M`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://api.kucoin.com/api/v1/mark-price/${pair}/current`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://api.kucoin.com/api/v1/mark-price/${pair}/current`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
-        if (data.code === "200000" && data.data && data.data.fundingRate !== undefined) {
+        if (
+          data.code === "200000" &&
+          data.data &&
+          data.data.fundingRate !== undefined
+        ) {
           const fundingRate = parseFloat(data.data.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -353,20 +369,21 @@ async function fetchBingXFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}-USDT`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://open-api.bingx.com/openApi/swap/v2/public/currentFundingRate?symbol=${pair}`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://open-api.bingx.com/openApi/swap/v2/public/currentFundingRate?symbol=${pair}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
         if (data.code === 0 && data.data) {
           const fundingRate = parseFloat(data.data.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -397,20 +414,21 @@ async function fetchXTCOMFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}USDT`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://api.xt.com/v4/public/funding-rate?symbol=${pair}`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://api.xt.com/v4/public/funding-rate?symbol=${pair}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
         if (data.code === 0 && data.data) {
           const fundingRate = parseFloat(data.data.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -441,20 +459,21 @@ async function fetchHTXFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol.toLowerCase()}-usdt`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://api.hbdm.com/linear-swap-api/v1/swap_funding_rate?contract_code=${pair}`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://api.hbdm.com/linear-swap-api/v1/swap_funding_rate?contract_code=${pair}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
         if (data.status === "ok" && data.data) {
           const fundingRate = parseFloat(data.data.funding_rate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -477,39 +496,11 @@ async function fetchHTXFundingRates(): Promise<FundingRateData[]> {
 }
 
 /**
- * Kraken API
+ * Kraken API - Note: Kraken doesn't expose funding rate in public API
  */
 async function fetchKrakenFundingRates(): Promise<FundingRateData[]> {
-  try {
-    const results: FundingRateData[] = [];
-
-    for (const symbol of TRADEABLE_SYMBOLS) {
-      const pair = `${symbol}USD`;
-      
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://api.kraken.com/0/public/Ticker?pair=${pair}F`, { 
-          signal: controller.signal 
-        });
-        clearTimeout(timeoutId);
-        if (!response.ok) continue;
-
-        const data = await response.json();
-        if (data.result) {
-          // Kraken doesn't expose funding rate in public API, skip for now
-          continue;
-        }
-      } catch (error) {
-        // Silently continue on error
-      }
-    }
-
-    return results;
-  } catch (error) {
-    console.error("Error fetching Kraken funding rates:", error);
-    return [];
-  }
+  // Kraken doesn't have a public funding rate API endpoint
+  return [];
 }
 
 /**
@@ -521,14 +512,15 @@ async function fetchDeribitFundingRates(): Promise<FundingRateData[]> {
 
     // Deribit primarily supports BTC and ETH
     const deribitSymbols = ["BTC", "ETH"];
-    
+
     for (const symbol of deribitSymbols) {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://www.deribit.com/api/v2/public/get_funding_rate_history?instrument_name=${symbol}-PERPETUAL&count=1`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://www.deribit.com/api/v2/public/get_funding_rate_history?instrument_name=${symbol}-PERPETUAL&count=1`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
@@ -536,7 +528,7 @@ async function fetchDeribitFundingRates(): Promise<FundingRateData[]> {
         if (data.result && data.result.length > 0) {
           const latest = data.result[0];
           const fundingRate = parseFloat(latest.interest_rate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -567,20 +559,21 @@ async function fetchMEXCFundingRates(): Promise<FundingRateData[]> {
 
     for (const symbol of TRADEABLE_SYMBOLS) {
       const pair = `${symbol}USDT`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(`https://contract.mexc.com/api/v1/contract/funding_rate/${pair}`, { 
-          signal: controller.signal 
-        });
+        const response = await fetch(
+          `https://contract.mexc.com/api/v1/contract/funding_rate/${pair}`,
+          { signal: controller.signal }
+        );
         clearTimeout(timeoutId);
         if (!response.ok) continue;
 
         const data = await response.json();
         if (data.code === 0 && data.data) {
           const fundingRate = parseFloat(data.data.fundingRate);
-          
+
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
@@ -619,7 +612,7 @@ async function fetchOtherExchangesFundingRates(): Promise<FundingRateData[]> {
 export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
   const results: FundingRateData[] = [];
 
-  // Fetch from all exchanges in parallel
+  // Fetch from all exchanges in parallel with error handling
   const [
     binanceRates,
     okxRates,
@@ -633,7 +626,7 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
     krakenRates,
     deribitRates,
     mexcRates,
-  ] = await Promise.all([
+  ] = await Promise.allSettled([
     fetchBinanceFundingRates(),
     fetchOKXFundingRates(),
     fetchBybitFundingRates(),
@@ -646,7 +639,9 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
     fetchKrakenFundingRates(),
     fetchDeribitFundingRates(),
     fetchMEXCFundingRates(),
-  ]);
+  ]).then((settled) =>
+    settled.map((result) => (result.status === "fulfilled" ? result.value : []))
+  );
 
   results.push(
     ...binanceRates,
@@ -661,6 +656,10 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
     ...krakenRates,
     ...deribitRates,
     ...mexcRates
+  );
+
+  console.log(
+    `[Exchanges] Fetched ${results.length} funding rates from ${new Set(results.map((r) => r.exchange)).size} exchanges`
   );
 
   return results;
