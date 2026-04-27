@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { TIME_FRAMES, AUTO_REFRESH_INTERVAL, formatFundingRate, calculateAnnualizedRate } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLocation } from "wouter";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ interface FundingRateData {
 }
 
 export default function Dashboard() {
+  const [, navigate] = useLocation();
   const [selectedTimeFrame, setSelectedTimeFrame] = useState(7);
   const [filterSymbol, setFilterSymbol] = useState("");
   const [filterExchange, setFilterExchange] = useState("");
@@ -100,11 +102,16 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Funding Rate Dashboard</h1>
-          <p className="text-slate-600">
-            Compare perpetual contract funding rates across top exchanges and cryptocurrencies
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">Funding Rate Dashboard</h1>
+            <p className="text-slate-600">
+              Compare perpetual contract funding rates across top exchanges and cryptocurrencies
+            </p>
+          </div>
+          <Button onClick={() => navigate("/chart")} variant="outline">
+            View Charts
+          </Button>
         </div>
 
         {/* Controls */}

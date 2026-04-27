@@ -22,9 +22,9 @@
 
 ## Phase 4: Advanced Features
 - [x] Implement summary statistics (average, min/max, annualized rate)
-- [ ] Build chart view for historical trends (line/bar chart)
-- [ ] Add chart interaction and cryptocurrency/exchange pair selection
-- [ ] Implement responsive chart sizing
+- [x] Build chart view for historical trends (line/bar chart)
+- [x] Add chart interaction and cryptocurrency/exchange pair selection
+- [x] Implement responsive chart sizing
 
 ## Phase 5: Auto-Refresh & Performance
 - [x] Implement auto-refresh mechanism (every 5 minutes)
@@ -41,6 +41,8 @@
 ## Deployment & Testing
 - [ ] Apply database migration to create tables
 - [ ] Deploy to production
-- [ ] Verify funding rate data is being fetched
-- [ ] Test dashboard functionality
+- [ ] Verify funding rate data is being fetched from exchanges
+- [ ] Test dashboard functionality and filters
+- [ ] Test chart view with historical data
 - [ ] Monitor background job performance
+- [ ] Verify responsive design on mobile/tablet/desktop
