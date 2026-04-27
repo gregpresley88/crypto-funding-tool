@@ -39,13 +39,17 @@
 - [x] Create checkpoint and prepare for deployment
 
 ## Deployment & Testing
-- [ ] Apply database migration to create tables
-- [ ] Deploy to production
-- [ ] Verify funding rate data is being fetched from exchanges
-- [ ] Test dashboard functionality and filters
-- [ ] Test chart view with historical data
-- [ ] Monitor background job performance
-- [ ] Verify responsive design on mobile/tablet/desktop
+- [x] Apply database migration to create tables (COMPLETED - tables created via init-db.mjs)
+- [x] Deploy to production
+- [x] Verify funding rate data is being fetched from exchanges
+- [x] Test dashboard functionality and filters
+- [x] Test chart view with historical data
+- [x] Monitor background job performance
+- [x] Verify responsive design on mobile/tablet/desktop
+
+## Bug Fixes
+- [x] Fixed: Database tables not created - created init-db.mjs script
+- [x] Fixed: Restarted server to activate background job
 
 ## Documentation
 - [x] Create DEPLOYMENT_GUIDE.md with step-by-step instructions
