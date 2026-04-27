@@ -46,3 +46,9 @@
 - [ ] Test chart view with historical data
 - [ ] Monitor background job performance
 - [ ] Verify responsive design on mobile/tablet/desktop
+
+## Documentation
+- [x] Create DEPLOYMENT_GUIDE.md with step-by-step instructions
+- [x] Create PROJECT_README.md with architecture and features
+- [x] Document API endpoints and data flow
+- [x] Document exchange API details and rate limits
