@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { decimal, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,60 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Funding rate data table storing historical funding rates for cryptocurrencies across exchanges.
+ * Each record represents a single OHLC (open, high, low, close) candle for a trading pair on an exchange.
+ */
+export const fundingRates = mysqlTable("funding_rates", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Cryptocurrency symbol (e.g., "BTC", "ETH") */
+  symbol: varchar("symbol", { length: 20 }).notNull(),
+  /** Trading pair (e.g., "BTCUSDT") */
+  pair: varchar("pair", { length: 30 }).notNull(),
+  /** Exchange name (e.g., "Binance", "OKX") */
+  exchange: varchar("exchange", { length: 50 }).notNull(),
+  /** Opening funding rate for the period */
+  open: decimal("open", { precision: 10, scale: 8 }).notNull(),
+  /** Highest funding rate during the period */
+  high: decimal("high", { precision: 10, scale: 8 }).notNull(),
+  /** Lowest funding rate during the period */
+  low: decimal("low", { precision: 10, scale: 8 }).notNull(),
+  /** Closing funding rate for the period */
+  close: decimal("close", { precision: 10, scale: 8 }).notNull(),
+  /** Timestamp of the candle (milliseconds since epoch) */
+  timestamp: int("timestamp").notNull(),
+  /** Time interval of the candle (e.g., "1h", "1d") */
+  interval: varchar("interval", { length: 10 }).notNull(),
+  /** When this record was created in the database */
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  /** When this record was last updated */
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FundingRate = typeof fundingRates.$inferSelect;
+export type InsertFundingRate = typeof fundingRates.$inferInsert;
+
+/**
+ * Cache table for latest funding rates to optimize dashboard performance.
+ * Stores the most recent funding rate for each symbol-exchange pair.
+ */
+export const fundingRatesLatest = mysqlTable("funding_rates_latest", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Cryptocurrency symbol (e.g., "BTC", "ETH") */
+  symbol: varchar("symbol", { length: 20 }).notNull(),
+  /** Trading pair (e.g., "BTCUSDT") */
+  pair: varchar("pair", { length: 30 }).notNull(),
+  /** Exchange name (e.g., "Binance", "OKX") */
+  exchange: varchar("exchange", { length: 50 }).notNull(),
+  /** Current funding rate */
+  fundingRate: decimal("funding_rate", { precision: 10, scale: 8 }).notNull(),
+  /** Timestamp of the latest data (milliseconds since epoch) */
+  timestamp: int("timestamp").notNull(),
+  /** When this record was created in the database */
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  /** When this record was last updated */
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FundingRateLatest = typeof fundingRatesLatest.$inferSelect;
+export type InsertFundingRateLatest = typeof fundingRatesLatest.$inferInsert;

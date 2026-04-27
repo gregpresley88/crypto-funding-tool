@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { startFundingRatesJob } from "../fundingRates.job";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -61,6 +62,9 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
+
+  // Start background job for fetching funding rates
+  startFundingRatesJob(5 * 60 * 1000); // Every 5 minutes
 }
 
 startServer().catch(console.error);
