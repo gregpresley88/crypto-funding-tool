@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { fundingRates } from "../drizzle/schema";
+import { fundingRates, fundingRatesLatest } from "../drizzle/schema";
 
 interface CSVRow {
   timestamp: string;
@@ -7,11 +7,12 @@ interface CSVRow {
   symbol: string;
   contract_name: string;
   funding_rate: string;
+  funding_period: string;
 }
 
 /**
  * Export all funding rates as CSV
- * Fields: timestamp, exchange, symbol, contract_name, funding_rate
+ * Fields: timestamp, exchange, symbol, contract_name, funding_rate, funding_period
  */
 export async function exportFundingRatesAsCSV(): Promise<string> {
   const db = await getDb();
@@ -27,16 +28,17 @@ export async function exportFundingRatesAsCSV(): Promise<string> {
     symbol: record.symbol,
     contract_name: record.pair,
     funding_rate: record.close,
+    funding_period: "8h",
   }));
 
   // Create CSV header
-  const header = "timestamp,exchange,symbol,contract_name,funding_rate\n";
+  const header = "timestamp,exchange,symbol,contract_name,funding_rate,funding_period\n";
 
   // Create CSV body
   const body = csvRows
     .map(
       (row) =>
-        `"${row.timestamp}","${row.exchange}","${row.symbol}","${row.contract_name}","${row.funding_rate}"`
+        `"${row.timestamp}","${row.exchange}","${row.symbol}","${row.contract_name}","${row.funding_rate}","${row.funding_period}"`
     )
     .join("\n");
 
@@ -51,7 +53,6 @@ export async function exportLatestFundingRatesAsCSV(): Promise<string> {
   if (!db) throw new Error("Database not available");
 
   // Fetch latest funding rates
-  const { fundingRatesLatest } = await import("../drizzle/schema");
   const records = await db.select().from(fundingRatesLatest);
 
   // Convert to CSV format
@@ -61,16 +62,17 @@ export async function exportLatestFundingRatesAsCSV(): Promise<string> {
     symbol: record.symbol,
     contract_name: record.pair,
     funding_rate: record.fundingRate,
+    funding_period: record.fundingPeriod || "8h",
   }));
 
   // Create CSV header
-  const header = "timestamp,exchange,symbol,contract_name,funding_rate\n";
+  const header = "timestamp,exchange,symbol,contract_name,funding_rate,funding_period\n";
 
   // Create CSV body
   const body = csvRows
     .map(
       (row) =>
-        `"${row.timestamp}","${row.exchange}","${row.symbol}","${row.contract_name}","${row.funding_rate}"`
+        `"${row.timestamp}","${row.exchange}","${row.symbol}","${row.contract_name}","${row.funding_rate}","${row.funding_period}"`
     )
     .join("\n");
 
@@ -91,13 +93,15 @@ export async function exportFundingRatesByDateRangeAsCSV(
   const endTimestamp = Math.floor(endDate.getTime() / 1000);
 
   // Fetch records within date range
-  const { gte, lte } = await import("drizzle-orm");
+  const { gte, lte, and } = await import("drizzle-orm");
   const records = await db
     .select()
     .from(fundingRates)
     .where(
-      gte(fundingRates.timestamp, startTimestamp) &&
+      and(
+        gte(fundingRates.timestamp, startTimestamp),
         lte(fundingRates.timestamp, endTimestamp)
+      )
     )
     .orderBy(fundingRates.timestamp);
 
@@ -108,16 +112,17 @@ export async function exportFundingRatesByDateRangeAsCSV(
     symbol: record.symbol,
     contract_name: record.pair,
     funding_rate: record.close,
+    funding_period: "8h",
   }));
 
   // Create CSV header
-  const header = "timestamp,exchange,symbol,contract_name,funding_rate\n";
+  const header = "timestamp,exchange,symbol,contract_name,funding_rate,funding_period\n";
 
   // Create CSV body
   const body = csvRows
     .map(
       (row) =>
-        `"${row.timestamp}","${row.exchange}","${row.symbol}","${row.contract_name}","${row.funding_rate}"`
+        `"${row.timestamp}","${row.exchange}","${row.symbol}","${row.contract_name}","${row.funding_rate}","${row.funding_period}"`
     )
     .join("\n");
 

@@ -83,3 +83,10 @@
 - [x] Add download button to dashboard
 - [ ] Test CoinGecko data coverage and accuracy
 - [ ] Optimize API rate limiting and caching
+
+
+## User Bug Reports & Fixes
+- [x] Add 8h funding rate period column to CSV export and dashboard
+- [ ] Fix Time Frame selector - implement working historical average calculations
+- [x] Store funding rate period (8h) in database
+- [x] Display period in CSV and dashboard table

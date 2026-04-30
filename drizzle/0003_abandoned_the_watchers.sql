@@ -1,0 +1,1 @@
+ALTER TABLE `funding_rates_latest` ADD `funding_period` varchar(10) DEFAULT '8h' NOT NULL;

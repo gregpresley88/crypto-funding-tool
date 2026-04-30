@@ -72,6 +72,8 @@ export const fundingRatesLatest = mysqlTable("funding_rates_latest", {
   exchange: varchar("exchange", { length: 50 }).notNull(),
   /** Current funding rate */
   fundingRate: decimal("funding_rate", { precision: 10, scale: 8 }).notNull(),
+  /** Funding rate period (e.g., "8h", "1h") */
+  fundingPeriod: varchar("funding_period", { length: 10 }).default("8h").notNull(),
   /** Timestamp of the latest data (milliseconds since epoch) */
   timestamp: int("timestamp").notNull(),
   /** When this record was created in the database */

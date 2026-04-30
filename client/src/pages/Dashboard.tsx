@@ -18,6 +18,7 @@ interface FundingRateData {
   symbol: string;
   exchange: string;
   fundingRate: string;
+  fundingPeriod?: string;
   timestamp: number;
 }
 
@@ -312,6 +313,7 @@ export default function Dashboard() {
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">Symbol</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">Exchange</th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">Funding Rate</th>
+                      <th className="text-center py-3 px-4 font-semibold text-slate-700">Period</th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">Annualized</th>
                       <th className="text-center py-3 px-4 font-semibold text-slate-700">Type</th>
                     </tr>
@@ -348,6 +350,9 @@ export default function Dashboard() {
                           </td>
                           <td className={`py-3 px-4 text-right font-semibold ${colorClass} rounded`}>
                             {formatFundingRate(rate)}
+                          </td>
+                          <td className="py-3 px-4 text-center text-slate-600 font-medium">
+                            {row.fundingPeriod || "8h"}
                           </td>
                           <td className="py-3 px-4 text-right text-slate-600">
                             {formatFundingRate(annualized)}
