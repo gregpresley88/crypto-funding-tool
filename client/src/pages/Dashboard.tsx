@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, ExternalLink } from "lucide-react";
+import { Loader2, RefreshCw, ExternalLink, Download } from "lucide-react";
 
 interface FundingRateData {
   symbol: string;
@@ -114,6 +114,21 @@ export default function Dashboard() {
     setLastRefresh(new Date());
   };
 
+  // CSV export functions
+  const { data: csvData } = trpc.fundingRates.exportLatestAsCSV.useQuery();
+
+  const handleDownloadCSV = () => {
+    if (!csvData?.csv) return;
+
+    const element = document.createElement("a");
+    const file = new Blob([csvData.csv], { type: "text/csv" });
+    element.href = URL.createObjectURL(file);
+    element.download = csvData.filename || "funding-rates.csv";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   const getFundingRateColor = (rate: number) => {
     if (rate > 0.0005) return "text-green-600 bg-green-50";
     if (rate > 0) return "text-green-500 bg-green-50";
@@ -203,15 +218,23 @@ export default function Dashboard() {
             </Select>
           </div>
 
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
             <Button
               onClick={handleRefresh}
               disabled={isLoading}
-              className="w-full"
+              className="flex-1"
               variant="outline"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Refresh
+            </Button>
+            <Button
+              onClick={handleDownloadCSV}
+              className="flex-1"
+              variant="outline"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
             </Button>
           </div>
         </div>

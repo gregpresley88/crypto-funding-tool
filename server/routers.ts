@@ -13,9 +13,9 @@ import {
   getAllSymbols,
   getAllExchanges,
 } from "./fundingRates.db";
+import { exportFundingRatesAsCSV, exportLatestFundingRatesAsCSV } from "./csv-export.service";
 
 export const appRouter = router({
-  // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
@@ -29,34 +29,22 @@ export const appRouter = router({
   }),
 
   fundingRates: router({
-    /**
-     * Get all latest funding rates
-     */
     getLatest: publicProcedure.query(async () => {
       return getLatestFundingRates();
     }),
 
-    /**
-     * Get latest funding rates for a specific symbol
-     */
     getLatestBySymbol: publicProcedure
       .input(z.object({ symbol: z.string() }))
       .query(async ({ input }) => {
         return getLatestFundingRatesBySymbol(input.symbol);
       }),
 
-    /**
-     * Get latest funding rates for a specific exchange
-     */
     getLatestByExchange: publicProcedure
       .input(z.object({ exchange: z.string() }))
       .query(async ({ input }) => {
         return getLatestFundingRatesByExchange(input.exchange);
       }),
 
-    /**
-     * Get historical funding rates for a symbol-exchange pair
-     */
     getHistory: publicProcedure
       .input(
         z.object({
@@ -77,9 +65,6 @@ export const appRouter = router({
         );
       }),
 
-    /**
-     * Get average funding rate statistics for a symbol
-     */
     getAverageBySymbol: publicProcedure
       .input(
         z.object({
@@ -98,23 +83,14 @@ export const appRouter = router({
         );
       }),
 
-    /**
-     * Get all available symbols
-     */
     getAllSymbols: publicProcedure.query(async () => {
       return getAllSymbols();
     }),
 
-    /**
-     * Get all available exchanges
-     */
     getAllExchanges: publicProcedure.query(async () => {
       return getAllExchanges();
     }),
 
-    /**
-     * Get average funding rate for a symbol-exchange pair over a time frame
-     */
     getAverageForTimeFrame: publicProcedure
       .input(
         z.object({
@@ -130,6 +106,22 @@ export const appRouter = router({
           input.daysBack
         );
       }),
+
+    exportAsCSV: publicProcedure.query(async () => {
+      const csv = await exportFundingRatesAsCSV();
+      return {
+        csv,
+        filename: `funding-rates-${new Date().toISOString().split("T")[0]}.csv`,
+      };
+    }),
+
+    exportLatestAsCSV: publicProcedure.query(async () => {
+      const csv = await exportLatestFundingRatesAsCSV();
+      return {
+        csv,
+        filename: `funding-rates-latest-${new Date().toISOString().split("T")[0]}.csv`,
+      };
+    }),
   }),
 });
 

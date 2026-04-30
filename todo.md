@@ -72,6 +72,14 @@
 
 
 ## User Reported Issues & Feature Requests
-- [ ] Implement Time Frame feature (7/14/30 days) to show historical averages
-- [ ] Add clickable exchange names that open exchange perpetual trading pages
-- [ ] Calculate and display historical funding rate averages for selected time frame
+- [ ] Implement Time Frame feature (7/14/30 days) to show historical averages (backend done, frontend pending)
+- [x] Add clickable exchange names that open exchange perpetual trading pages
+- [ ] Calculate and display historical funding rate averages for selected time frame (backend done, frontend pending)
+
+
+## Phase 8: CoinGecko Integration & CSV Export
+- [x] Implement CoinGecko API integration for all 20 exchanges
+- [x] Create CSV export endpoint with fields: timestamp, exchange, symbol, contract_name, funding_rate
+- [x] Add download button to dashboard
+- [ ] Test CoinGecko data coverage and accuracy
+- [ ] Optimize API rate limiting and caching

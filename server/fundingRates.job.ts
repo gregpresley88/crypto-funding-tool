@@ -3,7 +3,7 @@
  * Runs periodically to keep the database updated with latest funding rates
  */
 
-import { fetchAllFundingRates } from "./exchanges.service";
+import { fetchAllFundingRatesFromCoinGecko } from "./coingecko.service";
 import { upsertLatestFundingRates, insertFundingRates } from "./fundingRates.db";
 import type { InsertFundingRate, InsertFundingRateLatest } from "../drizzle/schema";
 
@@ -14,8 +14,8 @@ export async function syncFundingRates(): Promise<void> {
   try {
     console.log("[FundingRates Job] Starting funding rate sync...");
 
-    // Fetch latest funding rates from all exchanges
-    const fundingRates = await fetchAllFundingRates();
+    // Fetch latest funding rates from all exchanges via CoinGecko
+    const fundingRates = await fetchAllFundingRatesFromCoinGecko();
 
     if (fundingRates.length === 0) {
       console.warn("[FundingRates Job] No funding rates fetched");
@@ -48,7 +48,7 @@ export async function syncFundingRates(): Promise<void> {
       pair: `${rate.symbol}USDT`,
       exchange: rate.exchange,
       fundingRate: rate.fundingRate.toString(),
-      timestamp: Math.floor(rate.fundingTime / 1000), // Convert to seconds
+      timestamp: rate.timestamp,
     }));
 
     // Store historical OHLC data (for now, using close price as all OHLC values)
@@ -60,7 +60,7 @@ export async function syncFundingRates(): Promise<void> {
       high: rate.fundingRate.toString(),
       low: rate.fundingRate.toString(),
       close: rate.fundingRate.toString(),
-      timestamp: Math.floor(rate.fundingTime / 1000),
+      timestamp: rate.timestamp,
       interval: "1d",
     }));
 
