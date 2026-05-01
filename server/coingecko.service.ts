@@ -16,6 +16,32 @@ interface FundingRateData {
 }
 
 /**
+ * Map CoinGecko exchange names to display names
+ */
+const EXCHANGE_NAME_MAP: Record<string, string> = {
+  "binance": "Binance",
+  "okx": "OKX",
+  "bybit": "Bybit",
+  "gateio": "Gate",
+  "bitget": "Bitget",
+  "kucoin": "KuCoin",
+  "bingx": "BingX",
+  "xt": "XT.COM",
+  "huobi": "HTX",
+  "kraken": "Kraken",
+  "deribit": "Deribit",
+  "mexc": "MEXC",
+  "bitmart": "BitMart",
+  "bitfinex": "Bitfinex",
+  "lbank": "LBank",
+  "gemini": "Gemini",
+  "cryptocom": "Crypto.com",
+  "toobit": "Toobit",
+  "btcc": "BTCC",
+  "coinw": "CoinW",
+};
+
+/**
  * Get funding rates from CoinGecko for a specific exchange
  */
 async function getFundingRatesFromCoinGecko(
@@ -44,7 +70,7 @@ async function getFundingRatesFromCoinGecko(
       .map((item: any) => ({
         symbol: item.symbol?.toUpperCase() || item.name || "UNKNOWN",
         pair: item.symbol || "UNKNOWN",
-        exchange: exchange,
+        exchange: EXCHANGE_NAME_MAP[exchange] || exchange,
         fundingRate: parseFloat(item.funding_rate) || 0,
         timestamp: Math.floor(Date.now() / 1000),
         contractName: item.symbol || "UNKNOWN",
@@ -59,64 +85,29 @@ async function getFundingRatesFromCoinGecko(
  * Fetch funding rates from all supported exchanges
  */
 export async function fetchAllFundingRatesFromCoinGecko(): Promise<FundingRateData[]> {
-  const exchanges = [
-    "binance",
-    "okx",
-    "bybit",
-    "gateio",
-    "bitget",
-    "kucoin",
-    "bingx",
-    "xt",
-    "huobi",
-    "kraken",
-    "deribit",
-    "mexc",
-    "bitmart",
-    "bitfinex",
-    "lbank",
-    "gemini",
-    "cryptocom",
-    "toobit",
-    "btcc",
-    "coinw",
-  ];
+  const exchangeIds = Object.keys(EXCHANGE_NAME_MAP);
 
   const allRates: FundingRateData[] = [];
 
   // Fetch from each exchange with rate limiting
-  for (const exchange of exchanges) {
+  for (const exchangeId of exchangeIds) {
     try {
-      const rates = await getFundingRatesFromCoinGecko(exchange);
+      const rates = await getFundingRatesFromCoinGecko(exchangeId);
       allRates.push(...rates);
       // Rate limiting: wait 100ms between requests
       await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (error) {
-      console.error(`[CoinGecko] Error processing ${exchange}:`, error);
+      console.error(`[CoinGecko] Error processing ${exchangeId}:`, error);
     }
   }
 
-  console.log(`[CoinGecko] Fetched ${allRates.length} funding rates from ${exchanges.length} exchanges`);
+  console.log(`[CoinGecko] Fetched ${allRates.length} funding rates from ${exchangeIds.length} exchanges`);
   return allRates;
 }
 
 /**
- * Get list of available exchanges from CoinGecko
+ * Export the exchange name map for use in other modules
  */
-export async function getAvailableExchanges(): Promise<string[]> {
-  try {
-    const url = `${COINGECKO_API_BASE}/exchanges/derivatives`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      console.warn(`[CoinGecko] Failed to fetch exchanges list`);
-      return [];
-    }
-
-    const data = await response.json();
-    return data.map((e: any) => e.name).filter((name: string) => name);
-  } catch (error) {
-    console.error(`[CoinGecko] Error fetching exchanges:`, error);
-    return [];
-  }
+export function getExchangeNameMap(): Record<string, string> {
+  return EXCHANGE_NAME_MAP;
 }

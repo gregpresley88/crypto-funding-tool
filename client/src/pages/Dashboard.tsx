@@ -313,8 +313,8 @@ export default function Dashboard() {
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">Symbol</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">Exchange</th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">Funding Rate</th>
-                      <th className="text-center py-3 px-4 font-semibold text-slate-700">Period</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Annualized</th>
+                       <th className="text-right py-3 px-4 font-semibold text-slate-700">Period</th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Avg ({selectedTimeFrame}d)</th>
                       <th className="text-center py-3 px-4 font-semibold text-slate-700">Type</th>
                     </tr>
                   </thead>
@@ -355,7 +355,7 @@ export default function Dashboard() {
                             {row.fundingPeriod || "8h"}
                           </td>
                           <td className="py-3 px-4 text-right text-slate-600">
-                            {formatFundingRate(annualized)}
+                            <span className="text-slate-500">-</span>
                           </td>
                           <td className="py-3 px-4 text-center">
                             <span

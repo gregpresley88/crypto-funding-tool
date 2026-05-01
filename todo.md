@@ -90,3 +90,12 @@
 - [ ] Fix Time Frame selector - implement working historical average calculations
 - [x] Store funding rate period (8h) in database
 - [x] Display period in CSV and dashboard table
+
+
+## Critical Bug Fixes - User Reported
+- [ ] Switch from CoinGecko to Coinglass API for accurate funding rate data
+- [ ] Fix exchange names (lowercase issue) and ensure all 20 exchanges appear in dropdown
+- [ ] Remove Annualized column from dashboard
+- [ ] Add Historical Average column (7/14/30 day average based on selected time frame)
+- [ ] Fix exchange links to use Coinglass instead of Google search
+- [ ] Add support for smaller exchanges in historical funding rates page
