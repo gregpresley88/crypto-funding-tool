@@ -99,3 +99,10 @@
 - [ ] Add Historical Average column (7/14/30 day average based on selected time frame)
 - [ ] Fix exchange links to use Coinglass instead of Google search
 - [ ] Add support for smaller exchanges in historical funding rates page
+
+
+## Data Quality Issues - Conservative Approach
+- [ ] Fix symbol parsing conservatively - only fix known issues (TAO-PERP → TAOUSDT)
+- [ ] Avoid aggressive suffix stripping that creates duplicates
+- [ ] Validate data quality without over-processing
+- [x] ROLLED BACK: Aggressive parsing created thousands of duplicate contracts
