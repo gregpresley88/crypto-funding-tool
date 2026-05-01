@@ -42,30 +42,6 @@ const EXCHANGE_NAME_MAP: Record<string, string> = {
 };
 
 /**
- * Extract base symbol from contract name
- * Examples: "TAOUSDT" -> "TAO", "BTCUSDT" -> "BTC", "TAO-PERP" -> "TAO"
- */
-function extractBaseSymbol(contractName: string): string {
-  let symbol = contractName?.toUpperCase() || "UNKNOWN";
-  
-  // Remove common suffixes
-  symbol = symbol
-    .replace(/USDT$/, '')
-    .replace(/USDC$/, '')
-    .replace(/BUSD$/, '')
-    .replace(/PERP$/, '')
-    .replace(/SWAP$/, '')
-    .replace(/-PERP$/, '')
-    .replace(/-SWAP$/, '')
-    .replace(/PERPETUAL$/, '')
-    .replace(/QUARTERLY$/, '')
-    .replace(/INVERSE$/, '')
-    .trim();
-  
-  return symbol || "UNKNOWN";
-}
-
-/**
  * Get funding rates from CoinGecko for a specific exchange
  */
 async function getFundingRatesFromCoinGecko(
@@ -91,19 +67,14 @@ async function getFundingRatesFromCoinGecko(
     // Map CoinGecko response to our format
     return data
       .filter((item: any) => item.funding_rate !== null && item.funding_rate !== undefined)
-      .map((item: any) => {
-        const contractName = item.symbol || "UNKNOWN";
-        const baseSymbol = extractBaseSymbol(contractName);
-        
-        return {
-          symbol: baseSymbol,
-          pair: contractName,
-          exchange: EXCHANGE_NAME_MAP[exchange] || exchange,
-          fundingRate: parseFloat(item.funding_rate) || 0,
-          timestamp: Math.floor(Date.now() / 1000),
-          contractName: contractName,
-        };
-      });
+      .map((item: any) => ({
+        symbol: item.symbol?.toUpperCase() || item.name || "UNKNOWN",
+        pair: item.symbol || "UNKNOWN",
+        exchange: EXCHANGE_NAME_MAP[exchange] || exchange,
+        fundingRate: parseFloat(item.funding_rate) || 0,
+        timestamp: Math.floor(Date.now() / 1000),
+        contractName: item.symbol || "UNKNOWN",
+      }));
   } catch (error) {
     console.error(`[CoinGecko] Error fetching ${exchange}:`, error);
     return [];
