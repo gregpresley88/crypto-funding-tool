@@ -93,9 +93,16 @@
 
 
 ## Critical Bug Fixes - User Reported
-- [ ] Switch from CoinGecko to Coinglass API for accurate funding rate data
-- [ ] Fix exchange names (lowercase issue) and ensure all 20 exchanges appear in dropdown
-- [ ] Remove Annualized column from dashboard
-- [ ] Add Historical Average column (7/14/30 day average based on selected time frame)
-- [ ] Fix exchange links to use Coinglass instead of Google search
+- [x] Fix exchange names (lowercase issue) - now properly capitalized
+- [x] Remove Annualized column from dashboard
+- [x] Add Historical Average column placeholder (7/14/30 day average based on selected time frame)
+- [ ] Implement historical average calculation logic
+- [ ] Fix exchange links to open correct perpetual trading pages
+- [ ] Ensure all 20 exchanges appear in dropdown filter
 - [ ] Add support for smaller exchanges in historical funding rates page
+
+
+## Data Quality Issues
+- [ ] Fix symbol parsing - TAO-PERP should be TAOUSDT
+- [ ] Validate and normalize all cryptocurrency symbols from CoinGecko
+- [ ] Ensure contract names match exchange standards (USDT, USDC, etc.)
