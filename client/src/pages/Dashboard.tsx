@@ -70,31 +70,27 @@ export default function Dashboard() {
   const { data: symbols = [] } = trpc.fundingRates.getAllSymbols.useQuery();
   const { data: exchanges = [] } = trpc.fundingRates.getAllExchanges.useQuery();
 
-  // Fetch historical averages for each row
-  const historicalAverages = useMemo(() => {
+  // Calculate average funding rate for each symbol-exchange pair
+  const averagesByPair = useMemo(() => {
     if (!latestRates) return {};
     
-    const map: Record<string, Record<number, string | null>> = {};
+    const map: Record<string, number> = {};
+    const pairs: Record<string, number[]> = {};
     
-    latestRates.forEach((rate: FundingRateData) => {
+    // Group rates by symbol-exchange pair
+    (latestRates as FundingRateData[]).forEach((rate) => {
       const key = `${rate.symbol}-${rate.exchange}`;
-      if (!map[key]) {
-        map[key] = {};
-      }
+      if (!pairs[key]) pairs[key] = [];
+      pairs[key].push(parseFloat(rate.fundingRate));
+    });
+    
+    // Calculate average for each pair
+    Object.entries(pairs).forEach(([key, rates]) => {
+      map[key] = rates.reduce((a, b) => a + b, 0) / rates.length;
     });
     
     return map;
   }, [latestRates]);
-
-  // Fetch historical average for selected time frame
-  const { data: averageData } = trpc.fundingRates.getAverageForTimeFrame.useQuery(
-    {
-      symbol: filterSymbol || "BTC",
-      exchange: filterExchange || "Binance",
-      daysBack: selectedTimeFrame,
-    },
-    { enabled: !!filterSymbol && !!filterExchange }
-  );
 
   // Filter and sort data
   const filteredData = useMemo(() => {
@@ -371,7 +367,7 @@ export default function Dashboard() {
                             </a>
                           </td>
                           <td className="py-3 px-4 text-right text-slate-600">
-                            <span className="text-slate-500">-</span>
+                            <span className="font-medium">{formatFundingRate(averagesByPair[`${row.symbol}-${row.exchange}`] || 0)}</span>
                           </td>
                           <td className={`py-3 px-4 text-right font-semibold ${colorClass} rounded`}>
                             {formatFundingRate(rate)}

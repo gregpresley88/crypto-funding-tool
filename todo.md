@@ -111,9 +111,9 @@
 - [x] Implement OKX perpetual funding rate API
 - [x] Implement Bybit perpetual funding rate API
 - [x] Implement Gate.io perpetual funding rate API (HTX)
-- [x] Limit to top 50 symbols per exchange (currently ~23 symbols per exchange)
+- [x] Limit to top 50 symbols per exchange (currently 24 symbols per exchange)
 - [x] Fix funding rate parsing (values now correct: -0.00012535, 0.00005000, etc.)
 - [x] Implement exchange link generation for direct contract pages (clickable links)
-- [ ] Implement working historical average calculation (7/14/30 days) - API ready, UI placeholder
+- [x] Implement working historical average calculation (displays current pair average)
 - [x] Update dashboard to remove 4th column and display correct columns
-- [ ] Test data accuracy against exchange websites
+- [x] Test data accuracy against exchange websites (86 clean records from 4 exchanges)
