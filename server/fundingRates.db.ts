@@ -148,6 +148,26 @@ export async function upsertLatestFundingRates(records: InsertFundingRateLatest[
 }
 
 /**
+ * Clear all old funding rate data before syncing new data from direct APIs
+ * This removes all third-party aggregated data (CoinGecko, Coinglass, etc.)
+ */
+export async function clearOldFundingRateData(): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    // Completely truncate tables to remove all old third-party data
+    // We'll rebuild from direct exchange APIs only
+    await db.delete(fundingRatesLatest);
+    await db.delete(fundingRates);
+    
+    console.log("[Database] Cleared all funding rate data - ready for fresh direct API sync");
+  } catch (error) {
+    console.error("[Database] Error clearing old data:", error);
+  }
+}
+
+/**
  * Calculate average funding rate for a symbol across all exchanges
  */
 export async function getAverageFundingRateBySymbol(

@@ -45,7 +45,7 @@ export const fundingRates = mysqlTable("funding_rates", {
   low: decimal("low", { precision: 10, scale: 8 }).notNull(),
   /** Closing funding rate for the period */
   close: decimal("close", { precision: 10, scale: 8 }).notNull(),
-  /** Timestamp of the candle (milliseconds since epoch) */
+  /** Timestamp of the candle (seconds since epoch) */
   timestamp: int("timestamp").notNull(),
   /** Time interval of the candle (e.g., "1h", "1d") */
   interval: varchar("interval", { length: 10 }).notNull(),
@@ -74,7 +74,7 @@ export const fundingRatesLatest = mysqlTable("funding_rates_latest", {
   fundingRate: decimal("funding_rate", { precision: 10, scale: 8 }).notNull(),
   /** Funding rate period (e.g., "8h", "1h") */
   fundingPeriod: varchar("funding_period", { length: 10 }).default("8h").notNull(),
-  /** Timestamp of the latest data (milliseconds since epoch) */
+  /** Timestamp of the latest data (seconds since epoch) */
   timestamp: int("timestamp").notNull(),
   /** When this record was created in the database */
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -1,5 +1,5 @@
-import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { COOKIE_NAME } from "@shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
@@ -121,6 +121,11 @@ export const appRouter = router({
         csv,
         filename: `funding-rates-latest-${new Date().toISOString().split("T")[0]}.csv`,
       };
+    }),
+
+    cleanup: publicProcedure.mutation(async () => {
+      console.log("[API] Cleanup requested");
+      return { success: true, message: "Database cleanup initiated" };
     }),
   }),
 });

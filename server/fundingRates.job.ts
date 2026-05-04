@@ -3,9 +3,11 @@
  * Runs periodically to keep the database updated with latest funding rates
  */
 
-import { fetchAllFundingRatesFromCoinGecko } from "./coingecko.service";
-import { upsertLatestFundingRates, insertFundingRates } from "./fundingRates.db";
+import { fetchAllFundingRates } from "./exchanges.service";
+import { upsertLatestFundingRates, insertFundingRates, clearOldFundingRateData } from "./fundingRates.db";
 import type { InsertFundingRate, InsertFundingRateLatest } from "../drizzle/schema";
+
+
 
 /**
  * Main job function to fetch and store funding rates
@@ -14,8 +16,11 @@ export async function syncFundingRates(): Promise<void> {
   try {
     console.log("[FundingRates Job] Starting funding rate sync...");
 
-    // Fetch latest funding rates from all exchanges via CoinGecko
-    const fundingRates = await fetchAllFundingRatesFromCoinGecko();
+    // Clear old invalid data first
+    await clearOldFundingRateData();
+
+    // Fetch latest funding rates from all exchanges via direct APIs
+    const fundingRates = await fetchAllFundingRates();
 
     if (fundingRates.length === 0) {
       console.warn("[FundingRates Job] No funding rates fetched");
@@ -45,22 +50,23 @@ export async function syncFundingRates(): Promise<void> {
     // Prepare data for storage
     const latestRates: InsertFundingRateLatest[] = validRates.map((rate) => ({
       symbol: rate.symbol,
-      pair: `${rate.symbol}USDT`,
+      pair: rate.pair,
       exchange: rate.exchange,
       fundingRate: rate.fundingRate.toString(),
-      timestamp: rate.timestamp,
+      fundingPeriod: "8h",
+      timestamp: Math.floor(rate.timestamp), // Store in seconds
     }));
 
     // Store historical OHLC data (for now, using close price as all OHLC values)
     const historicalRates: InsertFundingRate[] = validRates.map((rate) => ({
       symbol: rate.symbol,
-      pair: `${rate.symbol}USDT`,
+      pair: rate.pair,
       exchange: rate.exchange,
       open: rate.fundingRate.toString(),
       high: rate.fundingRate.toString(),
       low: rate.fundingRate.toString(),
       close: rate.fundingRate.toString(),
-      timestamp: rate.timestamp,
+      timestamp: Math.floor(rate.timestamp), // Store in seconds
       interval: "1d",
     }));
 
@@ -69,6 +75,13 @@ export async function syncFundingRates(): Promise<void> {
       upsertLatestFundingRates(latestRates),
       insertFundingRates(historicalRates),
     ]);
+
+    // Log summary
+    const uniqueExchanges = new Set(validRates.map((r) => r.exchange)).size;
+    const uniqueSymbols = new Set(validRates.map((r) => r.symbol)).size;
+    console.log(
+      `[FundingRates Job] Stored ${validRates.length} rates (${uniqueSymbols} symbols, ${uniqueExchanges} exchanges)`
+    );
 
     console.log("[FundingRates Job] Successfully synced funding rates");
   } catch (error) {

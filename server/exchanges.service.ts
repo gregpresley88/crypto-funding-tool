@@ -5,9 +5,11 @@
 
 export interface FundingRateData {
   symbol: string;
+  pair: string;
   exchange: string;
   fundingRate: number;
   fundingTime: number;
+  timestamp: number;
   markPrice?: number;
   volume24h?: number;
 }
@@ -103,9 +105,11 @@ async function fetchBinanceFundingRates(): Promise<FundingRateData[]> {
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "Binance",
               fundingRate,
               fundingTime: latest.fundingTime,
+              timestamp: Math.floor(Date.now() / 1000),
               markPrice: parseFloat(latest.markPrice),
             });
           }
@@ -150,9 +154,11 @@ async function fetchOKXFundingRates(): Promise<FundingRateData[]> {
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair: instId,
               exchange: "OKX",
               fundingRate,
               fundingTime: parseInt(latest.fundingTime),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -201,9 +207,11 @@ async function fetchBybitFundingRates(): Promise<FundingRateData[]> {
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "Bybit",
               fundingRate,
               fundingTime: parseInt(latest.fundingRateTimestamp),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -246,11 +254,13 @@ async function fetchGateFundingRates(): Promise<FundingRateData[]> {
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "Gate",
               fundingRate,
               fundingTime: data.funding_time
                 ? parseInt(data.funding_time) * 1000
                 : Date.now(),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -293,9 +303,11 @@ async function fetchBitgetFundingRates(): Promise<FundingRateData[]> {
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "Bitget",
               fundingRate,
               fundingTime: parseInt(data.data.fundingTime),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -342,9 +354,11 @@ async function fetchKuCoinFundingRates(): Promise<FundingRateData[]> {
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "KuCoin",
               fundingRate,
               fundingTime: parseInt(data.data.timePoint),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -381,15 +395,17 @@ async function fetchBingXFundingRates(): Promise<FundingRateData[]> {
         if (!response.ok) continue;
 
         const data = await response.json();
-        if (data.code === 0 && data.data) {
+          if (data.code === 0 && data.data) {
           const fundingRate = parseFloat(data.data.fundingRate);
 
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "BingX",
               fundingRate,
               fundingTime: parseInt(data.data.fundingTime),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -426,15 +442,17 @@ async function fetchXTCOMFundingRates(): Promise<FundingRateData[]> {
         if (!response.ok) continue;
 
         const data = await response.json();
-        if (data.code === 0 && data.data) {
+          if (data.code === 0 && data.data) {
           const fundingRate = parseFloat(data.data.fundingRate);
 
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "XT.COM",
               fundingRate,
               fundingTime: parseInt(data.data.timestamp),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -471,15 +489,17 @@ async function fetchHTXFundingRates(): Promise<FundingRateData[]> {
         if (!response.ok) continue;
 
         const data = await response.json();
-        if (data.status === "ok" && data.data) {
+          if (data.status === "ok" && data.data) {
           const fundingRate = parseFloat(data.data.funding_rate);
 
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "HTX",
               fundingRate,
               fundingTime: data.data.funding_time,
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -525,16 +545,18 @@ async function fetchDeribitFundingRates(): Promise<FundingRateData[]> {
         if (!response.ok) continue;
 
         const data = await response.json();
-        if (data.result && data.result.length > 0) {
+          if (data.result && data.result.length > 0) {
           const latest = data.result[0];
           const fundingRate = parseFloat(latest.interest_rate);
 
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair: `${symbol}-PERPETUAL`,
               exchange: "Deribit",
               fundingRate,
               fundingTime: latest.timestamp,
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }
@@ -571,15 +593,17 @@ async function fetchMEXCFundingRates(): Promise<FundingRateData[]> {
         if (!response.ok) continue;
 
         const data = await response.json();
-        if (data.code === 0 && data.data) {
+          if (data.code === 0 && data.data) {
           const fundingRate = parseFloat(data.data.fundingRate);
 
           if (isValidFundingRate(fundingRate)) {
             results.push({
               symbol,
+              pair,
               exchange: "MEXC",
               fundingRate,
               fundingTime: parseInt(data.data.fundingTime),
+              timestamp: Math.floor(Date.now() / 1000),
             });
           }
         }

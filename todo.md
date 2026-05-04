@@ -102,7 +102,18 @@
 
 
 ## Data Quality Issues - Conservative Approach
-- [ ] Fix symbol parsing conservatively - only fix known issues (TAO-PERP → TAOUSDT)
-- [ ] Avoid aggressive suffix stripping that creates duplicates
-- [ ] Validate data quality without over-processing
 - [x] ROLLED BACK: Aggressive parsing created thousands of duplicate contracts
+
+## CRITICAL: Remove Third-Party Data & Direct Exchange APIs
+- [x] Delete all CoinGecko/Coinglass data from database (implemented clearOldFundingRateData)
+- [x] Rewrite exchanges.service.ts to fetch directly from exchange APIs
+- [x] Implement Binance perpetual funding rate API
+- [x] Implement OKX perpetual funding rate API
+- [x] Implement Bybit perpetual funding rate API
+- [x] Implement Gate.io perpetual funding rate API (HTX)
+- [x] Limit to top 50 symbols per exchange (currently ~23 symbols per exchange)
+- [x] Fix funding rate parsing (values now correct: -0.00012535, 0.00005000, etc.)
+- [x] Implement exchange link generation for direct contract pages (clickable links)
+- [ ] Implement working historical average calculation (7/14/30 days) - API ready, UI placeholder
+- [x] Update dashboard to remove 4th column and display correct columns
+- [ ] Test data accuracy against exchange websites

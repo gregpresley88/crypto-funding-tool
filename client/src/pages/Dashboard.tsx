@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
-import { TIME_FRAMES, AUTO_REFRESH_INTERVAL, formatFundingRate, calculateAnnualizedRate } from "@/const";
+import { TIME_FRAMES, AUTO_REFRESH_INTERVAL, formatFundingRate } from "@/const";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import {
   Select,
@@ -15,7 +14,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, RefreshCw, ExternalLink, Download } from "lucide-react";
 
 interface FundingRateData {
+  id: number;
   symbol: string;
+  pair: string;
   exchange: string;
   fundingRate: string;
   fundingPeriod?: string;
@@ -25,25 +26,31 @@ interface FundingRateData {
 /**
  * Get the perpetual trading link for each exchange
  */
-function getExchangeLink(exchange: string, symbol: string): string {
-  const pair = `${symbol}USDT`;
-  
-  const links: Record<string, string> = {
-    "Binance": `https://www.binance.com/en/futures/${pair}`,
-    "OKX": `https://www.okx.com/trade-swap/${symbol.toLowerCase()}-usdt`,
-    "Bybit": `https://www.bybit.com/trade/usdt/${pair}`,
-    "Gate": `https://www.gate.io/futures/usdt/${pair}`,
-    "Bitget": `https://www.bitget.com/spot/trading/${pair}`,
-    "KuCoin": `https://www.kucoin.com/trade/${pair}`,
-    "BingX": `https://bingx.com/trade/${pair}`,
-    "XT.COM": `https://www.xt.com/trade/${pair}`,
-    "HTX": `https://www.htx.com/trade/swap/${pair}`,
-    "Kraken": `https://www.kraken.com/prices/charts/xbtusd`,
-    "Deribit": `https://www.deribit.com/`,
-    "MEXC": `https://www.mexc.com/exchange/${pair}`,
+function getExchangeLink(exchange: string, pair: string): string {
+  const links: Record<string, (pair: string) => string> = {
+    "Binance": (pair) => `https://www.binance.com/en/futures/${pair.toLowerCase()}`,
+    "OKX": (pair) => {
+      const symbol = pair.replace("-USDT-SWAP", "").toLowerCase();
+      return `https://www.okx.com/trade-swap/${symbol}-usdt`;
+    },
+    "Bybit": (pair) => `https://www.bybit.com/trade/usdt/${pair}`,
+    "Gate": (pair) => `https://www.gate.io/futures/usdt/${pair.toLowerCase()}`,
+    "Bitget": (pair) => `https://www.bitget.com/spot/trading/${pair}`,
+    "KuCoin": (pair) => `https://www.kucoin.com/trade/${pair}`,
+    "BingX": (pair) => `https://bingx.com/trade/${pair}`,
+    "XT.COM": (pair) => `https://www.xt.com/trade/${pair}`,
+    "HTX": (pair) => `https://www.htx.com/trade/swap/${pair}`,
+    "Kraken": (pair) => `https://www.kraken.com/prices/charts/xbtusd`,
+    "Deribit": (pair) => `https://www.deribit.com/`,
+    "MEXC": (pair) => `https://www.mexc.com/exchange/${pair}`,
   };
   
-  return links[exchange] || "https://www.google.com/search?q=" + encodeURIComponent(`${exchange} ${symbol} perpetual trading`);
+  const linkGenerator = links[exchange];
+  if (linkGenerator) {
+    return linkGenerator(pair);
+  }
+  
+  return "https://www.google.com/search?q=" + encodeURIComponent(`${exchange} ${pair} perpetual`);
 }
 
 export default function Dashboard() {
@@ -62,6 +69,32 @@ export default function Dashboard() {
   // Fetch available symbols and exchanges
   const { data: symbols = [] } = trpc.fundingRates.getAllSymbols.useQuery();
   const { data: exchanges = [] } = trpc.fundingRates.getAllExchanges.useQuery();
+
+  // Fetch historical averages for each row
+  const historicalAverages = useMemo(() => {
+    if (!latestRates) return {};
+    
+    const map: Record<string, Record<number, string | null>> = {};
+    
+    latestRates.forEach((rate: FundingRateData) => {
+      const key = `${rate.symbol}-${rate.exchange}`;
+      if (!map[key]) {
+        map[key] = {};
+      }
+    });
+    
+    return map;
+  }, [latestRates]);
+
+  // Fetch historical average for selected time frame
+  const { data: averageData } = trpc.fundingRates.getAverageForTimeFrame.useQuery(
+    {
+      symbol: filterSymbol || "BTC",
+      exchange: filterExchange || "Binance",
+      daysBack: selectedTimeFrame,
+    },
+    { enabled: !!filterSymbol && !!filterExchange }
+  );
 
   // Filter and sort data
   const filteredData = useMemo(() => {
@@ -106,7 +139,7 @@ export default function Dashboard() {
       min,
       max,
       spread: max - min,
-      annualized: calculateAnnualizedRate(avg),
+      count: filteredData.length,
     };
   }, [filteredData]);
 
@@ -242,7 +275,7 @@ export default function Dashboard() {
 
         {/* Summary Statistics */}
         {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600">Average Rate</CardTitle>
@@ -278,15 +311,6 @@ export default function Dashboard() {
                 <div className="text-2xl font-bold text-slate-900">{formatFundingRate(statistics.spread)}</div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Annualized</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{formatFundingRate(statistics.annualized)}</div>
-              </CardContent>
-            </Card>
           </div>
         )}
 
@@ -312,18 +336,16 @@ export default function Dashboard() {
                     <tr className="border-b border-slate-200">
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">Symbol</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">Exchange</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Funding Rate</th>
-                       <th className="text-right py-3 px-4 font-semibold text-slate-700">Period</th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-700">Avg ({selectedTimeFrame}d)</th>
-                      <th className="text-center py-3 px-4 font-semibold text-slate-700">Type</th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Funding Rate</th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Period</th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700">24h Volume</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredData.map((row, idx) => {
                       const rate = parseFloat(row.fundingRate);
-                      const annualized = calculateAnnualizedRate(rate);
                       const colorClass = getFundingRateColor(rate);
-                      const type = rate > 0 ? "Longs Pay" : rate < 0 ? "Shorts Pay" : "Neutral";
 
                       return (
                         <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
@@ -338,7 +360,7 @@ export default function Dashboard() {
                           </td>
                           <td className="py-3 px-4">
                             <a
-                              href={getExchangeLink(row.exchange, row.symbol)}
+                              href={getExchangeLink(row.exchange, row.pair)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer inline-flex items-center gap-1"
@@ -348,6 +370,9 @@ export default function Dashboard() {
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           </td>
+                          <td className="py-3 px-4 text-right text-slate-600">
+                            <span className="text-slate-500">-</span>
+                          </td>
                           <td className={`py-3 px-4 text-right font-semibold ${colorClass} rounded`}>
                             {formatFundingRate(rate)}
                           </td>
@@ -356,19 +381,6 @@ export default function Dashboard() {
                           </td>
                           <td className="py-3 px-4 text-right text-slate-600">
                             <span className="text-slate-500">-</span>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                                rate > 0
-                                  ? "bg-green-100 text-green-700"
-                                  : rate < 0
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }`}
-                            >
-                              {type}
-                            </span>
                           </td>
                         </tr>
                       );
