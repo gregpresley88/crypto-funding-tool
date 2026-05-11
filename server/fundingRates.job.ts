@@ -4,7 +4,7 @@
  */
 
 import { fetchAllFundingRates } from "./exchanges.service";
-import { upsertLatestFundingRates, insertFundingRates, clearOldFundingRateData } from "./fundingRates.db";
+import { upsertLatestFundingRates, insertFundingRates } from "./fundingRates.db";
 import type { InsertFundingRate, InsertFundingRateLatest } from "../drizzle/schema";
 
 
@@ -15,9 +15,6 @@ import type { InsertFundingRate, InsertFundingRateLatest } from "../drizzle/sche
 export async function syncFundingRates(): Promise<void> {
   try {
     console.log("[FundingRates Job] Starting funding rate sync...");
-
-    // Clear old invalid data first
-    await clearOldFundingRateData();
 
     // Fetch latest funding rates from all exchanges via direct APIs
     const fundingRates = await fetchAllFundingRates();

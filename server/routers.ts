@@ -12,6 +12,7 @@ import {
   getAverageFundingRateForTimeFrame,
   getAllSymbols,
   getAllExchanges,
+  getBestSpreads,
 } from "./fundingRates.db";
 import { exportFundingRatesAsCSV, exportLatestFundingRatesAsCSV } from "./csv-export.service";
 
@@ -127,6 +128,12 @@ export const appRouter = router({
       console.log("[API] Cleanup requested");
       return { success: true, message: "Database cleanup initiated" };
     }),
+
+    getBestSpreads: publicProcedure
+      .input(z.object({ limit: z.number().default(5) }))
+      .query(async ({ input }) => {
+        return getBestSpreads(input.limit);
+      }),
   }),
 });
 

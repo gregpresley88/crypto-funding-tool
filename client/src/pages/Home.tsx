@@ -83,9 +83,40 @@ export default function Home() {
                 Filter by cryptocurrency or exchange, sort by funding rate, and compare across markets.
               </p>
             </div>
+            <div className="bg-slate-700/50 rounded-lg p-6 border border-slate-600">
+              <h4 className="text-xl font-semibold text-white mb-3">Best Spreads</h4>
+              <p className="text-slate-300">
+                Identify the top 5 cryptocurrencies with the largest funding rate spreads across exchanges.
+              </p>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* CTA Section */}
+      {isAuthenticated && (
+        <section className="bg-gradient-to-r from-blue-600 to-blue-700 py-12 px-4">
+          <div className="max-w-7xl mx-auto text-center">
+            <h3 className="text-2xl font-bold text-white mb-4">Ready to explore?</h3>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={() => navigate("/dashboard")}
+                variant="secondary"
+                className="text-lg px-8 py-6"
+              >
+                View Dashboard
+              </Button>
+              <Button
+                onClick={() => navigate("/spreads")}
+                variant="secondary"
+                className="text-lg px-8 py-6"
+              >
+                View Best Spreads
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

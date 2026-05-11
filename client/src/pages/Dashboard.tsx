@@ -33,13 +33,12 @@ function getExchangeLink(exchange: string, pair: string): string {
       const symbol = pair.replace("-USDT-SWAP", "").toLowerCase();
       return `https://www.okx.com/trade-swap/${symbol}-usdt`;
     },
-    "Bybit": (pair) => `https://www.bybit.com/trade/usdt/${pair}`,
     "Gate": (pair) => `https://www.gate.io/futures/usdt/${pair.toLowerCase()}`,
     "Bitget": (pair) => `https://www.bitget.com/spot/trading/${pair}`,
     "KuCoin": (pair) => `https://www.kucoin.com/trade/${pair}`,
     "BingX": (pair) => `https://bingx.com/trade/${pair}`,
     "XT.COM": (pair) => `https://www.xt.com/trade/${pair}`,
-    "HTX": (pair) => `https://www.htx.com/trade/swap/${pair}`,
+    "HTX": (pair) => `https://www.hbdm.vip/en-us/linear-swap/exchange/${pair.toLowerCase()}`,
     "Kraken": (pair) => `https://www.kraken.com/prices/charts/xbtusd`,
     "Deribit": (pair) => `https://www.deribit.com/`,
     "MEXC": (pair) => `https://www.mexc.com/exchange/${pair}`,

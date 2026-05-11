@@ -56,7 +56,6 @@ export const TRADEABLE_SYMBOLS = [
 export const EXCHANGES = [
   "Binance",
   "OKX",
-  "Bybit",
   "Gate",
   "Bitget",
   "KuCoin",

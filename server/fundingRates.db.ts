@@ -266,3 +266,62 @@ export async function getAverageFundingRateForTimeFrame(
 
   return result[0] || null;
 }
+
+
+/**
+ * Get best funding rate spreads (difference between highest and lowest rates for same symbol)
+ * Returns top N spreads sorted by spread size
+ */
+export async function getBestSpreads(limit: number = 5) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get all latest rates grouped by symbol
+  const allRates = await db
+    .select({
+      symbol: fundingRatesLatest.symbol,
+      exchange: fundingRatesLatest.exchange,
+      fundingRate: fundingRatesLatest.fundingRate,
+      pair: fundingRatesLatest.pair,
+    })
+    .from(fundingRatesLatest)
+    .orderBy(asc(fundingRatesLatest.symbol), asc(fundingRatesLatest.exchange));
+
+  // Group by symbol and calculate spreads
+  const spreadMap: Record<string, {
+    symbol: string;
+    highest: { exchange: string; rate: number; pair: string };
+    lowest: { exchange: string; rate: number; pair: string };
+    spread: number;
+  }> = {};
+
+  allRates.forEach((rate) => {
+    const rateNum = parseFloat(rate.fundingRate);
+    if (!spreadMap[rate.symbol]) {
+      spreadMap[rate.symbol] = {
+        symbol: rate.symbol,
+        highest: { exchange: rate.exchange, rate: rateNum, pair: rate.pair },
+        lowest: { exchange: rate.exchange, rate: rateNum, pair: rate.pair },
+        spread: 0,
+      };
+    } else {
+      if (rateNum > spreadMap[rate.symbol].highest.rate) {
+        spreadMap[rate.symbol].highest = { exchange: rate.exchange, rate: rateNum, pair: rate.pair };
+      }
+      if (rateNum < spreadMap[rate.symbol].lowest.rate) {
+        spreadMap[rate.symbol].lowest = { exchange: rate.exchange, rate: rateNum, pair: rate.pair };
+      }
+    }
+  });
+
+  // Calculate spreads and sort
+  const spreads = Object.values(spreadMap)
+    .map((item) => ({
+      ...item,
+      spread: item.highest.rate - item.lowest.rate,
+    }))
+    .sort((a, b) => b.spread - a.spread)
+    .slice(0, limit);
+
+  return spreads;
+}

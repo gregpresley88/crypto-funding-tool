@@ -50,7 +50,6 @@ export const TRADEABLE_SYMBOLS = [
 export const SUPPORTED_EXCHANGES = [
   "Binance",
   "OKX",
-  "Bybit",
   "Gate",
   "Bitget",
   "KuCoin",
@@ -482,7 +481,7 @@ async function fetchHTXFundingRates(): Promise<FundingRateData[]> {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         const response = await fetch(
-          `https://api.hbdm.com/linear-swap-api/v1/swap_funding_rate?contract_code=${pair}`,
+          `https://api.hbdm.vip/linear-swap-api/v1/swap_funding_rate?contract_code=${pair}`,
           { signal: controller.signal }
         );
         clearTimeout(timeoutId);
@@ -640,7 +639,6 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
   const [
     binanceRates,
     okxRates,
-    bybitRates,
     gateRates,
     bitgetRates,
     kuCoinRates,
@@ -653,7 +651,6 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
   ] = await Promise.allSettled([
     fetchBinanceFundingRates(),
     fetchOKXFundingRates(),
-    fetchBybitFundingRates(),
     fetchGateFundingRates(),
     fetchBitgetFundingRates(),
     fetchKuCoinFundingRates(),
@@ -670,7 +667,6 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
   results.push(
     ...binanceRates,
     ...okxRates,
-    ...bybitRates,
     ...gateRates,
     ...bitgetRates,
     ...kuCoinRates,

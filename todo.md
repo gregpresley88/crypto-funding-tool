@@ -117,3 +117,10 @@
 - [x] Implement working historical average calculation (displays current pair average)
 - [x] Update dashboard to remove 4th column and display correct columns
 - [x] Test data accuracy against exchange websites (86 clean records from 4 exchanges)
+
+
+## User Requested Changes - Session 2
+- [x] Remove Bybit entirely from exchanges and database
+- [x] Fix HTX links to use English website instead of Chinese (hbdm.com)
+- [x] Add new "Best Spreads" feature page showing top 5 best funding rate spreads
+- [ ] Fix historical funding rate page to display actual historical data (not just current rates) - IN PROGRESS
