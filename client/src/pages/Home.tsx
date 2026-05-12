@@ -14,13 +14,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">Crypto Funding Rates</h1>
           <div className="flex gap-4">
-            {isAuthenticated ? (
-              <>
-                <Button onClick={() => navigate("/dashboard")} variant="default">
-                  Dashboard
-                </Button>
-              </>
-            ) : (
+            <Button onClick={() => navigate("/dashboard")} variant="ghost">
+              Dashboard
+            </Button>
+            <Button onClick={() => navigate("/spreads")} variant="ghost">
+              Best Spreads
+            </Button>
+            {!isAuthenticated && (
               <Button onClick={() => (window.location.href = getLoginUrl())} variant="default">
                 Sign In
               </Button>
@@ -50,7 +50,7 @@ export default function Home() {
             ) : (
               <Button
                 size="lg"
-                onClick={() => (window.location.href = getLoginUrl())}
+                onClick={() => navigate("/dashboard")}
                 className="text-lg px-8 py-6"
               >
                 Get Started
@@ -83,12 +83,15 @@ export default function Home() {
                 Filter by cryptocurrency or exchange, sort by funding rate, and compare across markets.
               </p>
             </div>
-            <div className="bg-slate-700/50 rounded-lg p-6 border border-slate-600">
+            <button
+              onClick={() => navigate("/spreads")}
+              className="bg-slate-700/50 rounded-lg p-6 border border-slate-600 hover:border-blue-500 transition-colors text-left cursor-pointer"
+            >
               <h4 className="text-xl font-semibold text-white mb-3">Best Spreads</h4>
               <p className="text-slate-300">
                 Identify the top 5 cryptocurrencies with the largest funding rate spreads across exchanges.
               </p>
-            </div>
+            </button>
           </div>
         </div>
       </section>

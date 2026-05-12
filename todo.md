@@ -124,3 +124,9 @@
 - [x] Fix HTX links to use English website instead of Chinese (hbdm.com)
 - [x] Add new "Best Spreads" feature page showing top 5 best funding rate spreads
 - [ ] Fix historical funding rate page to display actual historical data (not just current rates) - IN PROGRESS
+
+
+## Critical Issues - Session 3
+- [ ] HTX data missing from database - Gate/HTX APIs timing out during sync (need to debug)
+- [x] Best Spreads link visible - links are implemented in BestSpreads.tsx
+- [x] "Get Started" button fixed - now navigates to Dashboard directly instead of login
