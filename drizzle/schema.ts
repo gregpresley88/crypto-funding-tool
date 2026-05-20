@@ -27,7 +27,7 @@ export type InsertUser = typeof users.$inferInsert;
 
 /**
  * Funding rate data table storing historical funding rates for cryptocurrencies across exchanges.
- * Each record represents a single OHLC (open, high, low, close) candle for a trading pair on an exchange.
+ * Each record represents a single funding rate snapshot at a specific time.
  */
 export const fundingRates = mysqlTable("funding_rates", {
   id: int("id").autoincrement().primaryKey(),
@@ -37,18 +37,12 @@ export const fundingRates = mysqlTable("funding_rates", {
   pair: varchar("pair", { length: 30 }).notNull(),
   /** Exchange name (e.g., "Binance", "OKX") */
   exchange: varchar("exchange", { length: 50 }).notNull(),
-  /** Opening funding rate for the period */
-  open: decimal("open", { precision: 10, scale: 8 }).notNull(),
-  /** Highest funding rate during the period */
-  high: decimal("high", { precision: 10, scale: 8 }).notNull(),
-  /** Lowest funding rate during the period */
-  low: decimal("low", { precision: 10, scale: 8 }).notNull(),
-  /** Closing funding rate for the period */
-  close: decimal("close", { precision: 10, scale: 8 }).notNull(),
-  /** Timestamp of the candle (seconds since epoch) */
+  /** Actual funding rate at this timestamp */
+  fundingRate: decimal("funding_rate", { precision: 10, scale: 8 }).notNull(),
+  /** Timestamp of the funding rate (seconds since epoch) */
   timestamp: int("timestamp").notNull(),
-  /** Time interval of the candle (e.g., "1h", "1d") */
-  interval: varchar("interval", { length: 10 }).notNull(),
+  /** Time interval (kept for index compatibility) */
+  interval: varchar("interval", { length: 10 }).notNull().default("1d"),
   /** When this record was created in the database */
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   /** When this record was last updated */

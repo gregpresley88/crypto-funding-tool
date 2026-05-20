@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { TRADEABLE_SYMBOLS, EXCHANGES, TIME_FRAMES, formatFundingRate } from "@/const";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ export default function ChartView() {
   const [selectedSymbol, setSelectedSymbol] = useState("BTC");
   const [selectedExchange, setSelectedExchange] = useState("Binance");
   const [selectedTimeFrame, setSelectedTimeFrame] = useState(7);
+  const [showPrice, setShowPrice] = useState(false);
 
   // Parse query parameters on mount
   useEffect(() => {
@@ -51,14 +53,48 @@ export default function ChartView() {
     { enabled: !!selectedSymbol && !!selectedExchange }
   );
 
+  // Fetch price data if checkbox is enabled
+  const [priceData, setPriceData] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!showPrice) return;
+    
+    const fetchPrices = async () => {
+      try {
+        // Fetch historical price data from CoinGecko
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/coins/${selectedSymbol.toLowerCase()}/market_chart?vs_currency=usd&days=${selectedTimeFrame}&interval=daily`
+        );
+        const data = await response.json();
+        
+        // Convert prices to a map by date
+        const priceMap: Record<string, number> = {};
+        if (data.prices) {
+          data.prices.forEach((price: [number, number]) => {
+            const date = new Date(price[0]).toLocaleDateString();
+            priceMap[date] = price[1];
+          });
+        }
+        setPriceData(priceMap);
+      } catch (error) {
+        console.error("Failed to fetch price data:", error);
+      }
+    };
+    
+    fetchPrices();
+  }, [showPrice, selectedSymbol, selectedTimeFrame]);
+
   // Transform data for chart
-  const chartData = (historyData || []).map((item: any) => ({
-    time: new Date(item.timestamp * 1000).toLocaleDateString(),
-    rate: parseFloat(item.close) * 100, // Convert to percentage
-    open: parseFloat(item.open) * 100,
-    high: parseFloat(item.high) * 100,
-    low: parseFloat(item.low) * 100,
-  }));
+  const chartData = (historyData || []).map((item: any) => {
+    const time = new Date(item.timestamp * 1000).toLocaleDateString();
+    return {
+      time,
+      rate: parseFloat(item.close) * 100, // Convert to percentage
+      open: parseFloat(item.open) * 100,
+      high: parseFloat(item.high) * 100,
+      low: parseFloat(item.low) * 100,
+      price: priceData[time] || null,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
@@ -81,7 +117,7 @@ export default function ChartView() {
         </div>
 
         {/* Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Symbol</label>
             <Select value={selectedSymbol} onValueChange={setSelectedSymbol}>
@@ -130,14 +166,18 @@ export default function ChartView() {
             </Select>
           </div>
 
-          <div className="flex items-end">
-            <Button
-              onClick={() => navigate("/dashboard")}
-              variant="outline"
-              className="w-full"
-            >
-              Back to Dashboard
-            </Button>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Options</label>
+            <div className="flex items-center gap-2 p-2 border rounded-md bg-white">
+              <Checkbox
+                id="show-price"
+                checked={showPrice}
+                onCheckedChange={(checked) => setShowPrice(checked as boolean)}
+              />
+              <label htmlFor="show-price" className="text-sm cursor-pointer">
+                Show Price
+              </label>
+            </div>
           </div>
         </div>
 
@@ -165,7 +205,7 @@ export default function ChartView() {
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
-                  <YAxis />
+                  <YAxis yAxisId="left" label={{ value: 'Funding Rate (%)', angle: -90, position: 'insideLeft' }} />
                   <Tooltip
                     formatter={(value) => `${(typeof value === 'number' ? value : 0).toFixed(4)}%`}
                     labelFormatter={(label) => `Date: ${label}`}
@@ -176,8 +216,22 @@ export default function ChartView() {
                     dataKey="rate"
                     stroke="#3b82f6"
                     dot={false}
-                    name="Funding Rate"
+                    name="Funding Rate (%)"
+                    yAxisId="left"
                   />
+                  {showPrice && (
+                    <>
+                      <YAxis yAxisId="right" orientation="right" />
+                      <Line
+                        type="monotone"
+                        dataKey="price"
+                        stroke="#10b981"
+                        dot={false}
+                        name={`${selectedSymbol} Price (USD)`}
+                        yAxisId="right"
+                      />
+                    </>
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             )}

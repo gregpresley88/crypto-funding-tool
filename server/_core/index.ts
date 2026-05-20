@@ -8,7 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { startFundingRatesJob } from "../fundingRates.job";
+import { syncFundingRates } from "../fundingRates.job";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -37,6 +37,24 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  
+  // Scheduled endpoint for Heartbeat cron (runs every 5 minutes via Manus platform)
+  // This endpoint is called by Manus Heartbeat to sync funding rates 24/7
+  app.post("/api/scheduled/syncFundingRates", async (req, res) => {
+    try {
+      console.log("[Heartbeat] Syncing funding rates...");
+      await syncFundingRates();
+      res.json({ ok: true, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error("[Heartbeat] Error syncing funding rates:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+        context: { url: req.url, timestamp: new Date().toISOString() },
+      });
+    }
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",
@@ -63,8 +81,8 @@ async function startServer() {
     console.log(`Server running on http://localhost:${port}/`);
   });
 
-  // Start background job for fetching funding rates
-  startFundingRatesJob(5 * 60 * 1000); // Every 5 minutes
+  console.log("[Server] Heartbeat endpoint ready at /api/scheduled/syncFundingRates");
+  console.log("[Server] Set up Heartbeat cron with: manus-heartbeat create --name funding-rates-sync --cron '0 */5 * * * *' --path /api/scheduled/syncFundingRates --description 'Sync funding rates every 5 minutes'");
 }
 
 startServer().catch(console.error);

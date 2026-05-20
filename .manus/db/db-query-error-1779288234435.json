@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE funding_rates DROP INDEX idx_symbol_exchange_timestamp; ALTER TABLE funding_rates DROP COLUMN `open`, DROP COLUMN `high`, DROP COLUMN `low`, DROP COLUMN `close`, DROP COLUMN `interval`; ALTER TABLE funding_rates ADD COLUMN `funding_rate` DECIMAL(10, 8) NOT NULL DEFAULT 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FNMQesabAvDuEq.root --database nkps7WxhFD5dJL7UVMd2Kc --execute ALTER TABLE funding_rates DROP INDEX idx_symbol_exchange_timestamp; ALTER TABLE funding_rates DROP COLUMN `open`, DROP COLUMN `high`, DROP COLUMN `low`, DROP COLUMN `close`, DROP COLUMN `interval`; ALTER TABLE funding_rates ADD COLUMN `funding_rate` DECIMAL(10, 8) NOT NULL DEFAULT 0;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1091 (42000) at line 1: index idx_symbol_exchange_timestamp doesn't exist"
+  ]
+}

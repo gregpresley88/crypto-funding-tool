@@ -132,3 +132,11 @@
 - [x] "Get Started" button fixed - now navigates to Dashboard directly instead of login
 - [x] Best Spreads navigation - added to header and feature card is clickable
 - [x] Best Spreads calculation verified - test shows XLM spread of 0.00016915 (Binance 0.0001 vs OKX -0.00006915)
+
+
+## Historical Data Backfill Feature
+- [ ] Research exchange APIs for historical funding rate data (Binance, OKX, HTX, Gate)
+- [ ] Implement backfill function to download past funding rates
+- [ ] Create admin endpoint to trigger backfill for date ranges
+- [ ] Test backfill and verify data integrity
+- [ ] Fill May 15-20 gap with historical data

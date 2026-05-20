@@ -14,10 +14,7 @@ export async function upsertFundingRate(data: InsertFundingRate): Promise<void> 
     .values(data)
     .onDuplicateKeyUpdate({
       set: {
-        open: data.open,
-        high: data.high,
-        low: data.low,
-        close: data.close,
+        fundingRate: data.fundingRate,
         updatedAt: new Date(),
       },
     });
@@ -38,10 +35,7 @@ export async function insertFundingRates(records: InsertFundingRate[]): Promise<
     const batch = records.slice(i, i + batchSize);
     await db.insert(fundingRates).values(batch).onDuplicateKeyUpdate({
       set: {
-        open: sql`VALUES(\`open\`)`,
-        high: sql`VALUES(\`high\`)`,
-        low: sql`VALUES(\`low\`)`,
-        close: sql`VALUES(\`close\`)`,
+        fundingRate: sql`VALUES(\`funding_rate\`)`,
         updatedAt: new Date(),
       },
     });
@@ -68,7 +62,6 @@ export async function getFundingRatesBySymbolAndExchange(
       and(
         eq(fundingRates.symbol, symbol),
         eq(fundingRates.exchange, exchange),
-        eq(fundingRates.interval, interval),
         gte(fundingRates.timestamp, startTime),
         lte(fundingRates.timestamp, endTime)
       )
@@ -182,15 +175,14 @@ export async function getAverageFundingRateBySymbol(
   const result = await db
     .select({
       symbol: fundingRates.symbol,
-      avgClose: sql<string>`AVG(CAST(${fundingRates.close} AS DECIMAL(10,8)))`,
-      minClose: sql<string>`MIN(CAST(${fundingRates.close} AS DECIMAL(10,8)))`,
-      maxClose: sql<string>`MAX(CAST(${fundingRates.close} AS DECIMAL(10,8)))`,
+      avgClose: sql<string>`AVG(CAST(${fundingRates.fundingRate} AS DECIMAL(10,8)))`,
+      minClose: sql<string>`MIN(CAST(${fundingRates.fundingRate} AS DECIMAL(10,8)))`,
+      maxClose: sql<string>`MAX(CAST(${fundingRates.fundingRate} AS DECIMAL(10,8)))`,
     })
     .from(fundingRates)
     .where(
       and(
         eq(fundingRates.symbol, symbol),
-        eq(fundingRates.interval, interval),
         gte(fundingRates.timestamp, startTime),
         lte(fundingRates.timestamp, endTime)
       )

@@ -54,17 +54,13 @@ export async function syncFundingRates(): Promise<void> {
       timestamp: Math.floor(rate.timestamp), // Store in seconds
     }));
 
-    // Store historical OHLC data (for now, using close price as all OHLC values)
+    // Store historical funding rate data
     const historicalRates: InsertFundingRate[] = validRates.map((rate) => ({
       symbol: rate.symbol,
       pair: rate.pair,
       exchange: rate.exchange,
-      open: rate.fundingRate.toString(),
-      high: rate.fundingRate.toString(),
-      low: rate.fundingRate.toString(),
-      close: rate.fundingRate.toString(),
+      fundingRate: rate.fundingRate.toString(),
       timestamp: Math.floor(rate.timestamp), // Store in seconds
-      interval: "1d",
     }));
 
     // Store data
