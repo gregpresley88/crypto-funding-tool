@@ -217,7 +217,6 @@ export default function Dashboard() {
                 <SelectValue placeholder="All symbols" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All symbols</SelectItem>
                 {symbols.map((sym) => (
                   <SelectItem key={sym} value={sym}>
                     {sym}
@@ -234,7 +233,6 @@ export default function Dashboard() {
                 <SelectValue placeholder="All exchanges" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All exchanges</SelectItem>
                 {exchanges.map((ex) => (
                   <SelectItem key={ex} value={ex}>
                     {ex}
