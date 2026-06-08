@@ -317,3 +317,40 @@ export async function getBestSpreads(limit: number = 5) {
 
   return spreads;
 }
+
+
+/**
+ * Get historical averages for all symbol-exchange pairs within a time range
+ * Returns a map of "symbol-exchange" -> average funding rate
+ */
+export async function getHistoricalAverages(
+  startTime: number,
+  endTime: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({
+      symbol: fundingRates.symbol,
+      exchange: fundingRates.exchange,
+      avgRate: sql<string>`AVG(CAST(${fundingRates.fundingRate} AS DECIMAL(10,8)))`,
+    })
+    .from(fundingRates)
+    .where(
+      and(
+        gte(fundingRates.timestamp, startTime),
+        lte(fundingRates.timestamp, endTime)
+      )
+    )
+    .groupBy(fundingRates.symbol, fundingRates.exchange);
+
+  // Convert to map format
+  const map: Record<string, number> = {};
+  result.forEach((row) => {
+    const key = `${row.symbol}-${row.exchange}`;
+    map[key] = parseFloat(row.avgRate) || 0;
+  });
+
+  return map;
+}

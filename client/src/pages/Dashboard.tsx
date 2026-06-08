@@ -21,6 +21,7 @@ interface FundingRateData {
   fundingRate: string;
   fundingPeriod?: string;
   timestamp: number;
+  avgFundingRate?: number;
 }
 
 /**
@@ -69,33 +70,38 @@ export default function Dashboard() {
   const { data: symbols = [] } = trpc.fundingRates.getAllSymbols.useQuery();
   const { data: exchanges = [] } = trpc.fundingRates.getAllExchanges.useQuery();
 
-  // Calculate average funding rate for each symbol-exchange pair
+  // Calculate time range for historical data
+  const now = new Date();
+  const startTime = Math.floor((now.getTime() - selectedTimeFrame * 24 * 60 * 60 * 1000) / 1000);
+  const endTime = Math.floor(now.getTime() / 1000);
+
+  // Fetch historical averages for the selected time frame
+  const { data: historicalAverages = {} } = trpc.fundingRates.getHistoricalAverages.useQuery(
+    { startTime, endTime },
+    { enabled: true }
+  );
+
+  // Calculate average funding rate for each symbol-exchange pair from historical data
   const averagesByPair = useMemo(() => {
-    if (!latestRates) return {};
-    
     const map: Record<string, number> = {};
-    const pairs: Record<string, number[]> = {};
     
-    // Group rates by symbol-exchange pair
-    (latestRates as FundingRateData[]).forEach((rate) => {
-      const key = `${rate.symbol}-${rate.exchange}`;
-      if (!pairs[key]) pairs[key] = [];
-      pairs[key].push(parseFloat(rate.fundingRate));
-    });
-    
-    // Calculate average for each pair
-    Object.entries(pairs).forEach(([key, rates]) => {
-      map[key] = rates.reduce((a, b) => a + b, 0) / rates.length;
-    });
+    if (historicalAverages && typeof historicalAverages === 'object') {
+      Object.entries(historicalAverages).forEach(([key, value]: [string, any]) => {
+        map[key] = parseFloat(value) || 0;
+      });
+    }
     
     return map;
-  }, [latestRates]);
+  }, [historicalAverages]);
 
   // Filter and sort data
   const filteredData = useMemo(() => {
     if (!latestRates) return [];
 
-    let filtered = latestRates as FundingRateData[];
+    let filtered = (latestRates as FundingRateData[]).map((rate) => ({
+      ...rate,
+      avgFundingRate: averagesByPair[`${rate.symbol}-${rate.exchange}`] || 0,
+    }));
 
     if (filterSymbol) {
       filtered = filtered.filter((row) => row.symbol === filterSymbol);
@@ -118,19 +124,22 @@ export default function Dashboard() {
     });
 
     return filtered;
-  }, [latestRates, filterSymbol, filterExchange, sortBy]);
+  }, [latestRates, filterSymbol, filterExchange, sortBy, averagesByPair]);
 
   // Calculate summary statistics
   const statistics = useMemo(() => {
     if (!filteredData.length) return null;
 
     const rates = filteredData.map((r) => parseFloat(r.fundingRate));
+    const historicalRates = filteredData.map((r) => r.avgFundingRate || 0);
     const avg = rates.reduce((a, b) => a + b, 0) / rates.length;
+    const historicalAvg = historicalRates.reduce((a, b) => a + b, 0) / historicalRates.length;
     const min = Math.min(...rates);
     const max = Math.max(...rates);
 
     return {
       avg,
+      historicalAvg,
       min,
       max,
       spread: max - min,
@@ -202,12 +211,12 @@ export default function Dashboard() {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Symbol</label>
-            <Select value={filterSymbol || "all"} onValueChange={(v) => setFilterSymbol(v === "all" ? "" : v)}>
+            <Select value={filterSymbol} onValueChange={setFilterSymbol}>
               <SelectTrigger>
                 <SelectValue placeholder="All symbols" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All symbols</SelectItem>
+                <SelectItem value="">All symbols</SelectItem>
                 {symbols.map((sym) => (
                   <SelectItem key={sym} value={sym}>
                     {sym}
@@ -219,12 +228,12 @@ export default function Dashboard() {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Exchange</label>
-            <Select value={filterExchange || "all"} onValueChange={(v) => setFilterExchange(v === "all" ? "" : v)}>
+            <Select value={filterExchange} onValueChange={setFilterExchange}>
               <SelectTrigger>
                 <SelectValue placeholder="All exchanges" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All exchanges</SelectItem>
+                <SelectItem value="">All exchanges</SelectItem>
                 {exchanges.map((ex) => (
                   <SelectItem key={ex} value={ex}>
                     {ex}
@@ -241,69 +250,68 @@ export default function Dashboard() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="rate-desc">Highest First</SelectItem>
-                <SelectItem value="rate-asc">Lowest First</SelectItem>
+                <SelectItem value="rate-desc">Highest Rate</SelectItem>
+                <SelectItem value="rate-asc">Lowest Rate</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex items-end gap-2">
-            <Button
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="flex-1"
-              variant="outline"
-            >
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
               Refresh
             </Button>
-            <Button
-              onClick={handleDownloadCSV}
-              className="flex-1"
-              variant="outline"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
+            <Button onClick={handleDownloadCSV} variant="outline" size="sm" className="gap-2">
+              <Download className="w-4 h-4" />
+              CSV
             </Button>
           </div>
         </div>
 
-        {/* Summary Statistics */}
+        {/* Statistics Summary */}
         {statistics && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Average Rate</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">Avg Rate (Current)</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{formatFundingRate(statistics.avg)}</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {formatFundingRate(statistics.avg)}
+                </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Min Rate</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Avg Rate ({selectedTimeFrame}d)
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{formatFundingRate(statistics.min)}</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {formatFundingRate(statistics.historicalAvg)}
+                </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Max Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{formatFundingRate(statistics.max)}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-slate-600">Spread</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{formatFundingRate(statistics.spread)}</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {formatFundingRate(statistics.spread)}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">Pairs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">{statistics.count}</div>
               </CardContent>
             </Card>
           </div>
@@ -314,72 +322,69 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Funding Rates</CardTitle>
             <CardDescription>
-              {filteredData.length} results • Last updated: {lastRefresh.toLocaleTimeString()}
+              {filteredData.length} pairs • Last updated: {lastRefresh.toLocaleTimeString()}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading && !latestRates ? (
+            {isLoading ? (
               <div className="flex justify-center items-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
               </div>
             ) : filteredData.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">No data available</div>
+              <div className="text-center py-12 text-slate-500">No funding rates available</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Symbol</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Exchange</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Avg ({selectedTimeFrame}d)</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Funding Rate</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Period</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">24h Volume</th>
+                      <th className="text-left py-3 px-4 font-medium text-slate-700">Symbol</th>
+                      <th className="text-left py-3 px-4 font-medium text-slate-700">Exchange</th>
+                      <th className="text-left py-3 px-4 font-medium text-slate-700">Avg ({selectedTimeFrame}d)</th>
+                      <th className="text-left py-3 px-4 font-medium text-slate-700">Current Rate</th>
+                      <th className="text-left py-3 px-4 font-medium text-slate-700">Period</th>
+                      <th className="text-left py-3 px-4 font-medium text-slate-700">Volume (24h)</th>
+                      <th className="text-center py-3 px-4 font-medium text-slate-700">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredData.map((row, idx) => {
-                      const rate = parseFloat(row.fundingRate);
-                      const colorClass = getFundingRateColor(rate);
-
-                      return (
-                        <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                          <td className="py-3 px-4 font-medium">
-                            <button
-                              onClick={() => navigate(`/chart?symbol=${row.symbol}&exchange=${row.exchange}`)}
-                              className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
-                              title="Click to view historical chart"
-                            >
-                              {row.symbol}
-                            </button>
-                          </td>
-                          <td className="py-3 px-4">
-                            <a
-                              href={getExchangeLink(row.exchange, row.pair)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer inline-flex items-center gap-1"
-                              title={`Open ${row.exchange} perpetual trading page`}
-                            >
-                              {row.exchange}
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </td>
-                          <td className="py-3 px-4 text-right text-slate-600">
-                            <span className="font-medium">{formatFundingRate(averagesByPair[`${row.symbol}-${row.exchange}`] || 0)}</span>
-                          </td>
-                          <td className={`py-3 px-4 text-right font-semibold ${colorClass} rounded`}>
-                            {formatFundingRate(rate)}
-                          </td>
-                          <td className="py-3 px-4 text-center text-slate-600 font-medium">
-                            {row.fundingPeriod || "8h"}
-                          </td>
-                          <td className="py-3 px-4 text-right text-slate-600">
-                            <span className="text-slate-500">-</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {filteredData.map((row) => (
+                      <tr
+                        key={`${row.symbol}-${row.exchange}`}
+                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                      >
+                        <td className="py-3 px-4">
+                          <button
+                            onClick={() => navigate(`/chart?symbol=${row.symbol}&exchange=${row.exchange}`)}
+                            className="text-blue-600 hover:underline font-medium"
+                          >
+                            {row.symbol}
+                          </button>
+                        </td>
+                        <td className="py-3 px-4 text-slate-700">{row.exchange}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${getFundingRateColor(row.avgFundingRate || 0)}`}>
+                            {formatFundingRate(row.avgFundingRate || 0)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${getFundingRateColor(parseFloat(row.fundingRate))}`}>
+                            {formatFundingRate(parseFloat(row.fundingRate))}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-slate-700">{row.fundingPeriod || "8h"}</td>
+                        <td className="py-3 px-4 text-slate-700">-</td>
+                        <td className="py-3 px-4 text-center">
+                          <a
+                            href={getExchangeLink(row.exchange, row.pair)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

@@ -13,6 +13,7 @@ import {
   getAllSymbols,
   getAllExchanges,
   getBestSpreads,
+  getHistoricalAverages,
 } from "./fundingRates.db";
 import { exportFundingRatesAsCSV, exportLatestFundingRatesAsCSV } from "./csv-export.service";
 
@@ -133,6 +134,17 @@ export const appRouter = router({
       .input(z.object({ limit: z.number().default(5) }))
       .query(async ({ input }) => {
         return getBestSpreads(input.limit);
+      }),
+
+    getHistoricalAverages: publicProcedure
+      .input(
+        z.object({
+          startTime: z.number(),
+          endTime: z.number(),
+        })
+      )
+      .query(async ({ input }) => {
+        return getHistoricalAverages(input.startTime, input.endTime);
       }),
   }),
 });

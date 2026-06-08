@@ -140,3 +140,9 @@
 - [ ] Create admin endpoint to trigger backfill for date ranges
 - [ ] Test backfill and verify data integrity
 - [ ] Fill May 15-20 gap with historical data
+
+
+## CRITICAL BUGS - Session 4 (User Reported)
+- [ ] Historical data not displaying - ChartView shows "No historical data available" despite data in database
+- [ ] Average calculation broken - Time frame selector (7/14/30d) doesn't update Avg column values
+- [ ] Add BitMEX exchange to funding rate sync

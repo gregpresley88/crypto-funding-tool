@@ -48,7 +48,6 @@ export default function ChartView() {
       exchange: selectedExchange,
       startTime,
       endTime,
-      interval: "1d",
     },
     { enabled: !!selectedSymbol && !!selectedExchange }
   );
@@ -88,10 +87,7 @@ export default function ChartView() {
     const time = new Date(item.timestamp * 1000).toLocaleDateString();
     return {
       time,
-      rate: parseFloat(item.close) * 100, // Convert to percentage
-      open: parseFloat(item.open) * 100,
-      high: parseFloat(item.high) * 100,
-      low: parseFloat(item.low) * 100,
+      rate: parseFloat(item.fundingRate) * 100, // Convert to percentage
       price: priceData[time] || null,
     };
   });

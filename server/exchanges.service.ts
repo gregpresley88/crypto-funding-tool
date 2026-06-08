@@ -59,6 +59,7 @@ export const SUPPORTED_EXCHANGES = [
   "Kraken",
   "Deribit",
   "MEXC",
+  "BitMEX",
   "BitMart",
   "Bitfinex",
   "LBank",
@@ -619,6 +620,55 @@ async function fetchMEXCFundingRates(): Promise<FundingRateData[]> {
 }
 
 /**
+ * BitMEX API
+ */
+async function fetchBitMEXFundingRates(): Promise<FundingRateData[]> {
+  try {
+    const results: FundingRateData[] = [];
+
+    for (const symbol of TRADEABLE_SYMBOLS) {
+      const pair = `${symbol}USD`;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(
+          `https://www.bitmex.com/api/v1/instrument?symbol=${pair}&columns=symbol,fundingRate,markPrice`,
+          { signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const latest = data[0];
+          const fundingRate = parseFloat(latest.fundingRate);
+
+          if (isValidFundingRate(fundingRate)) {
+            results.push({
+              symbol,
+              pair,
+              exchange: "BitMEX",
+              fundingRate,
+              fundingTime: Date.now(),
+              timestamp: Math.floor(Date.now() / 1000),
+              markPrice: parseFloat(latest.markPrice),
+            });
+          }
+        }
+      } catch (error) {
+        // Silently continue on error
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Error fetching BitMEX funding rates:", error);
+    return [];
+  }
+}
+
+/**
  * BitMart, Bitfinex, LBank, Gemini, Crypto.com, Toobit, BTCC, CoinW
  * These exchanges have limited or no public funding rate APIs
  * Placeholder implementations for future enhancement
@@ -648,6 +698,7 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
     krakenRates,
     deribitRates,
     mexcRates,
+    bitmexRates,
   ] = await Promise.allSettled([
     fetchBinanceFundingRates(),
     fetchOKXFundingRates(),
@@ -660,6 +711,7 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
     fetchKrakenFundingRates(),
     fetchDeribitFundingRates(),
     fetchMEXCFundingRates(),
+    fetchBitMEXFundingRates(),
   ]).then((settled) =>
     settled.map((result) => (result.status === "fulfilled" ? result.value : []))
   );
@@ -675,7 +727,8 @@ export async function fetchAllFundingRates(): Promise<FundingRateData[]> {
     ...htxRates,
     ...krakenRates,
     ...deribitRates,
-    ...mexcRates
+    ...mexcRates,
+    ...bitmexRates
   );
 
   console.log(
