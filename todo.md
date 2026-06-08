@@ -142,7 +142,7 @@
 - [ ] Fill May 15-20 gap with historical data
 
 
-## CRITICAL BUGS - Session 4 (User Reported)
-- [ ] Historical data not displaying - ChartView shows "No historical data available" despite data in database
-- [ ] Average calculation broken - Time frame selector (7/14/30d) doesn't update Avg column values
-- [ ] Add BitMEX exchange to funding rate sync
+## CRITICAL BUGS - Session 4 (User Reported) - ALL FIXED ✅
+- [x] Historical data not displaying - Fixed ChartView to use fundingRate column instead of removed OHLC
+- [x] Average calculation broken - Dashboard now fetches historical averages based on time frame selector
+- [x] Add BitMEX exchange to funding rate sync - Full API integration added

@@ -43,6 +43,7 @@ function getExchangeLink(exchange: string, pair: string): string {
     "Kraken": (pair) => `https://www.kraken.com/prices/charts/xbtusd`,
     "Deribit": (pair) => `https://www.deribit.com/`,
     "MEXC": (pair) => `https://www.mexc.com/exchange/${pair}`,
+    "BitMEX": (pair) => `https://www.bitmex.com/trade/${pair.toLowerCase()}`,
   };
   
   const linkGenerator = links[exchange];

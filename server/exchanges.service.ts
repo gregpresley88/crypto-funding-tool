@@ -621,19 +621,23 @@ async function fetchMEXCFundingRates(): Promise<FundingRateData[]> {
 
 /**
  * BitMEX API
+ * Note: BitMEX API is slow and often times out. Using a simplified version.
  */
 async function fetchBitMEXFundingRates(): Promise<FundingRateData[]> {
   try {
     const results: FundingRateData[] = [];
 
-    for (const symbol of TRADEABLE_SYMBOLS) {
+    // BitMEX API is unreliable, so we use a shorter timeout and only fetch a few symbols
+    const topSymbols = ["BTC", "ETH", "XRP"]; // Only fetch top 3 symbols
+
+    for (const symbol of topSymbols) {
       const pair = `${symbol}USD`;
 
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
         const response = await fetch(
-          `https://www.bitmex.com/api/v1/instrument?symbol=${pair}&columns=symbol,fundingRate,markPrice`,
+          `https://www.bitmex.com/api/v1/instrument?symbol=${pair}`,
           { signal: controller.signal }
         );
         clearTimeout(timeoutId);
@@ -657,7 +661,7 @@ async function fetchBitMEXFundingRates(): Promise<FundingRateData[]> {
           }
         }
       } catch (error) {
-        // Silently continue on error
+        // Silently continue on error - BitMEX API is unreliable
       }
     }
 
