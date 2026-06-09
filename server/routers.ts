@@ -16,9 +16,11 @@ import {
   getHistoricalAverages,
 } from "./fundingRates.db";
 import { exportFundingRatesAsCSV, exportLatestFundingRatesAsCSV } from "./csv-export.service";
+import { backfillRouter } from "./backfill-endpoint";
 
 export const appRouter = router({
   system: systemRouter,
+  backfill: backfillRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

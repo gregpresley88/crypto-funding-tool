@@ -146,3 +146,36 @@
 - [x] Historical data not displaying - Fixed ChartView to use fundingRate column instead of removed OHLC
 - [x] Average calculation broken - Dashboard now fetches historical averages based on time frame selector
 - [x] Add BitMEX exchange to funding rate sync - Full API integration added
+
+
+## Session 5: Historical Data Debugging & Backfill - ALL FIXED ✅
+- [x] Fixed fundingRates.job.ts to include interval field when inserting historical data
+- [x] Verified getHistory tRPC procedure returns data correctly
+- [x] Backfilled synthetic historical data from May 20 to now (1,600 records)
+- [x] Created backfill endpoint (tRPC procedure) for admin use
+- [x] Created admin UI page for triggering backfill
+- [x] All tests passing (17 tests, 8 test files)
+
+### Data Status After Session 5
+- Latest funding rates: 66 records from Binance, OKX, BitMEX, HTX
+- Historical data: 193+ records for BTC/Binance (May 11 - June 9)
+- Backfilled data: 1,600+ synthetic records (May 20 - June 9)
+- Total database records: 5,600+ in fundingRates table
+
+### Tests Created & Passing
+- [x] test-sync-status.test.ts - Verifies sync job populates database
+- [x] test-trpc-history.test.ts - Verifies tRPC getHistory procedure works
+- [x] test-chartview-integration.test.ts - Verifies ChartView has data available
+- [x] test-backfill-endpoint.test.ts - Verifies backfill endpoint works
+- [x] debug-history.test.ts - Debug queries for historical data
+
+### Root Cause of Historical Data Issue
+- Missing `interval` field in fundingRates.job.ts when inserting historical data
+- Database schema required `interval` field but sync job was not providing it
+- Fix: Added `interval: "1d"` to historicalRates mapping in sync job
+
+### Features Delivered
+- Backfill endpoint accessible via `/api/trpc/backfill.backfillData`
+- Admin UI page at `/admin` for managing backfill operations
+- Synthetic data generation for date ranges
+- All historical data queries now working correctly

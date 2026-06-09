@@ -61,6 +61,7 @@ export async function syncFundingRates(): Promise<void> {
       exchange: rate.exchange,
       fundingRate: rate.fundingRate.toString(),
       timestamp: Math.floor(rate.timestamp), // Store in seconds
+      interval: "1d", // Default interval
     }));
 
     // Store data
