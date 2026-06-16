@@ -43,7 +43,7 @@ function getExchangeLink(exchange: string, pair: string): string {
     "Kraken": (pair) => `https://www.kraken.com/prices/charts/xbtusd`,
     "Deribit": (pair) => `https://www.deribit.com/`,
     "MEXC": (pair) => `https://www.mexc.com/exchange/${pair}`,
-    "BitMEX": (pair) => `https://www.bitmex.com/trade/${pair.toLowerCase()}`,
+    "BitMEX": (pair) => `https://www.bitmex.com/trade/${pair.toUpperCase()}`,
   };
   
   const linkGenerator = links[exchange];
@@ -356,7 +356,7 @@ export default function Dashboard() {
                             onClick={() => navigate(`/chart?symbol=${row.symbol}&exchange=${row.exchange}`)}
                             className="text-blue-600 hover:underline font-medium"
                           >
-                            {row.symbol}
+                            {row.pair}
                           </button>
                         </td>
                         <td className="py-3 px-4 text-slate-700">{row.exchange}</td>
