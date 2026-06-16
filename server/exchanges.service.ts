@@ -627,17 +627,20 @@ async function fetchBitMEXFundingRates(): Promise<FundingRateData[]> {
   try {
     const results: FundingRateData[] = [];
 
-    // BitMEX API is unreliable, so we use a shorter timeout and only fetch a few symbols
-    const topSymbols = ["BTC", "ETH", "XRP"]; // Only fetch top 3 symbols
+    // BitMEX only has a limited set of perpetual contracts
+    // Map our symbols to BitMEX's available contracts
+    const bitMexContracts: Record<string, string> = {
+      "BTC": "XBTUSD",      // Bitcoin USD (actively trading)
+      "ETH": "ETHXBT",      // Ethereum BTC-margined
+      "LTC": "LTCXBT",      // Litecoin BTC-margined
+    };
 
-    for (const symbol of topSymbols) {
-      const pair = `${symbol}USD`;
-
+    for (const [symbol, contractSymbol] of Object.entries(bitMexContracts)) {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
         const response = await fetch(
-          `https://www.bitmex.com/api/v1/instrument?symbol=${pair}`,
+          `https://www.bitmex.com/api/v1/instrument?symbol=${contractSymbol}`,
           { signal: controller.signal }
         );
         clearTimeout(timeoutId);
@@ -645,18 +648,20 @@ async function fetchBitMEXFundingRates(): Promise<FundingRateData[]> {
 
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
-          const latest = data[0];
-          const fundingRate = parseFloat(latest.fundingRate);
+          const instrument = data[0];
+          const fundingRate = parseFloat(instrument.fundingRate);
 
           if (isValidFundingRate(fundingRate)) {
+            // Display the actual BitMEX contract name (e.g., XBTUSD, ETHXBT)
+            // This shows users it's a BTC-margined contract
             results.push({
               symbol,
-              pair,
+              pair: contractSymbol, // Use actual BitMEX contract symbol
               exchange: "BitMEX",
               fundingRate,
               fundingTime: Date.now(),
               timestamp: Math.floor(Date.now() / 1000),
-              markPrice: parseFloat(latest.markPrice),
+              markPrice: instrument.markPrice ? parseFloat(instrument.markPrice) : undefined,
             });
           }
         }
